@@ -46,6 +46,23 @@ export function buildRecommendation(p: Program, criteria: Criterion[]): Recommen
   if (p.kind === "evento") return eventRecommendation(p);
   if (p.kind !== "convocatoria") return null;
 
+  // Requirements inferred from a form are weaker evidence than published bases.
+  if (p.criteria_source === "form" && criteria.length) {
+    const hasNo = criteria.some((c) => c.verdict === "no_cumple");
+    return {
+      tone: hasNo ? "red" : "amber",
+      title: hasNo ? "No encaja con lo que pide el formulario" : "Revisá antes de aplicar",
+      body: hasNo
+        ? "Los requisitos los inferí de las preguntas del formulario (no hay bases publicadas) y uno no se cumple."
+        : "No hay bases publicadas: los requisitos los inferí de las preguntas del formulario. Confirmalos antes de invertir tiempo.",
+      points: criteria.slice(0, 3).map((c) => ({
+        kind: c.verdict === "cumple" ? ("ok" as const) : c.verdict === "no_cumple" ? ("block" as const) : ("pending" as const),
+        text: c.text,
+        reason: c.reason ?? null,
+      })),
+    };
+  }
+
   if (!criteria.length) {
     return {
       tone: "gray",

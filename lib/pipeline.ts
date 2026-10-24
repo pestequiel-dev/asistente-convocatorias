@@ -1,7 +1,8 @@
 import { getDb, getSetting, nowIso } from "./db";
 import { crawlSite, resolveStartUrl, type CrawledPage } from "./crawler";
 import { classify, fetchPreview } from "./classify";
-import { extract, type ExtractionDate } from "./extract";
+import { extract, criteriaFromForm, type ExtractionDate } from "./extract";
+import { extractFormQuestions } from "./form-questions";
 import { extractCompetitor, extractEvent, extractInvestor, scoreEventRelevance, scoreInvestor } from "./extract-kind";
 import { applyOverrides, computeScore, matchHeuristic, matchWithLlm } from "./eligibility";
 import { diffSnapshots, formatDiff } from "./diff";
@@ -259,6 +260,26 @@ async function saveOpportunity(
   if (extraction.closing && !dates.some((d) => d.date_iso === extraction.closing?.date_iso)) dates.unshift(extraction.closing);
   if (extraction.opening && !dates.some((d) => d.date_iso === extraction.opening?.date_iso)) dates.push(extraction.opening);
   for (const d of dates) insertDate.run(id, d.label, d.kind, d.raw, d.date_iso, d.timezone, d.url, d.quote);
+
+  if (!extraction.criteria.length) {
+    const formUrl =
+      extraction.applies_url ?? formCandidates.find((u) => /(apply|postul|aplica)/i.test(u)) ?? null;
+    if (formUrl) {
+      const read = await extractFormQuestions(formUrl, id).catch(() => null);
+      if (read?.status === "ok") {
+        const derived = await criteriaFromForm(read.questions, {
+          title: extraction.title,
+          organization: extraction.organization,
+          summary: extraction.summary,
+        }).catch(() => []);
+        if (derived.length) {
+          extraction.criteria = derived;
+          db.prepare("UPDATE programs SET criteria_source = 'form' WHERE id = ?").run(id);
+          log(id, `sin bases: ${derived.length} requisitos derivados del formulario`);
+        }
+      }
+    }
+  }
 
   const insertCriterion = db.prepare(
     `INSERT INTO criteria (program_id, text, category, source_url, quote, verdict, reason, confidence)

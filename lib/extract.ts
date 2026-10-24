@@ -484,3 +484,44 @@ export async function extract(
     warning: "No hay API key de DeepSeek: análisis heurístico (menos preciso). Configurala en Ajustes.",
   };
 }
+
+/**
+ * Some programs never publish "bases": the requirements live in the questions
+ * of their application form. Derive verifiable criteria from them.
+ */
+export async function criteriaFromForm(
+  questions: string[],
+  ctx: { title: string | null; organization: string | null; summary: string | null }
+): Promise<{ text: string; category: string; url: string; quote: string; confidence: number }[]> {
+  if (!questions.length) return [];
+  const { json } = await chatJson<{
+    criteria: { text: string; category: string; quote: string }[];
+  }>(
+    `Convertís preguntas de un formulario de postulación en requisitos verificables.
+Devolvés JSON {"criteria":[{"text":"...","category":"...","quote":"la pregunta original"}]}.
+Reglas:
+- Solo requisitos que se puedan verificar contra el perfil de una startup (país, etapa, tracción, sector, equipo, idioma, legal).
+- Si la pregunta NO implica un requisito (ej. "¿cómo nos conociste?"), no la conviertas.
+- Máximo 6. Texto en tercera persona, corto.
+- Categorías válidas: producto, traccion, equipo, legal, geografia, idioma, etapa, otro.`,
+    `Programa: ${ctx.title ?? ""} (${ctx.organization ?? ""})
+Resumen: (${ctx.summary ?? ""}).slice(0, 400)}
+
+Preguntas del formulario:
+${questions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`,
+    { maxTokens: 1500, temperature: 0.2 }
+  );
+
+  return (json.criteria ?? [])
+    .filter((c) => c.text && c.text.length > 10)
+    .slice(0, 6)
+    .map((c) => ({
+      text: c.text.slice(0, 200),
+      category: ["producto", "traccion", "equipo", "legal", "geografia", "idioma", "etapa", "otro"].includes(c.category)
+        ? c.category
+        : "otro",
+      url: "",
+      quote: (c.quote ?? "").slice(0, 200),
+      confidence: 0.6,
+    }));
+}
