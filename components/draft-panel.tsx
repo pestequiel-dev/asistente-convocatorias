@@ -237,31 +237,17 @@ export function DraftPanel({
             )}
 
             {gaps.length > 0 && (
-              <div className="banner banner-warn" style={{ marginBottom: 14 }}>
-                <AlertTriangle size={15} style={{ flex: "none", marginTop: 2 }} />
+              <div className="banner banner-warn" style={{ marginBottom: 14, alignItems: "center" }}>
+                <AlertTriangle size={15} style={{ flex: "none" }} />
                 <div style={{ flex: 1 }}>
                   <strong>
                     {gaps.length} dato{gaps.length === 1 ? "" : "s"} sin completar.
                   </strong>{" "}
-                  Las respuestas de abajo son editables: tocá “Completar” y te lleva al lugar exacto.
-                  <div style={{ marginTop: 8, display: "grid", gap: 6 }}>
-                    {gaps.map((g, k) => (
-                      <div key={k} className="row-between wrap" style={{ gap: 8 }}>
-                        <span className="small" style={{ minWidth: 0 }}>
-                          {g.question.length > 70 ? `${g.question.slice(0, 70)}…` : g.question} —{" "}
-                          <em>{g.token.replace(/^\[FALTA:\s*/i, "").replace(/\]$/, "")}</em>
-                        </span>
-                        <button
-                          type="button"
-                          className="btn btn-sm"
-                          onClick={() => goToGap(g.i, g.token)}
-                        >
-                          Completar
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                  Están marcados en la respuesta que corresponde.
                 </div>
+                <button type="button" className="btn btn-sm" onClick={() => goToGap(gaps[0].i, gaps[0].token)}>
+                  Ir al primero
+                </button>
               </div>
             )}
 
