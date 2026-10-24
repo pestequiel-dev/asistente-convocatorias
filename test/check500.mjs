@@ -1,0 +1,11 @@
+import { chromium } from "playwright";
+const b = await chromium.launch({ headless: true, executablePath: "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" });
+const p = await b.newPage();
+const resp = await p.goto("http://500mexicocity.com/", { waitUntil: "domcontentloaded", timeout: 30000 }).catch(e => null);
+await p.waitForTimeout(2500);
+console.log("final url:", p.url());
+console.log("status:", resp?.status());
+const links = await p.evaluate(() => [...document.querySelectorAll("a[href]")].map(a => ({ t: (a.innerText||"").trim().slice(0,40), h: a.href })).slice(0, 30));
+console.log(JSON.stringify(links, null, 1));
+console.log("--- text:", (await p.evaluate(() => document.body.innerText)).slice(0, 600));
+await b.close();

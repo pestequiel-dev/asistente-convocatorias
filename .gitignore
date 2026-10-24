@@ -1,0 +1,10 @@
+node_modules/
+.next/
+data/
+.playwright-browsers/
+.npm-cache/
+.env.local
+test/shot-*.png
+*.log
+.DS_Store
+tsconfig.tsbuildinfo
