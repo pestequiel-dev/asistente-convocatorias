@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight, Download, Inbox, Plus, RefreshCw, Search, Sparkles, TriangleAlert, Check, X, Trash2,
@@ -46,7 +46,7 @@ export function Dashboard({ programs, profileName, hasKey, mode }: Props) {
   const [view, setView] = useState<"timeline" | "table">("timeline");
   const [minFit, setMinFit] = useState(0);
   const [order, setOrder] = useState<"recent" | "fit_desc" | "fit_asc">("recent");
-  const restored = useRef(false);
+  const [ready, setReady] = useState(false);
 
   // Remember the filters between visits; defaults would silently hide records.
   useEffect(() => {
@@ -62,17 +62,19 @@ export function Dashboard({ programs, profileName, hasKey, mode }: Props) {
     } catch {
       /* ignore */
     }
-    restored.current = true;
+    // Only after the restored values have been applied to state.
+    setReady(true);
   }, []);
 
   useEffect(() => {
-    if (!restored.current) return;
+    // Saving in the same commit as the restore would overwrite it with defaults.
+    if (!ready) return;
     try {
       localStorage.setItem("resumen-filtros", JSON.stringify({ tab, minFit, order }));
     } catch {
       /* ignore */
     }
-  }, [tab, minFit, order]);
+  }, [tab, minFit, order, ready]);
   const [showInbox, setShowInbox] = useState(false);
 
   useEffect(() => {
