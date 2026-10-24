@@ -24,22 +24,29 @@ function same(a: string, b: string) {
   return a === b || (a.length >= 4 && b.length >= 4 && (a.startsWith(b) || b.startsWith(a)));
 }
 
+/** How much of the candidate (a question) is covered by what the field says. */
 function score(labelTokens: string[], candidate: string) {
   const c = tokens(candidate);
   if (!c.length || !labelTokens.length) return 0;
   let hit = 0;
   for (const w of c) if (labelTokens.some((l) => same(l, w))) hit++;
-  return hit / Math.max(c.length, 1) / Math.max(1, Math.min(2, c.length)) + (hit ? 0.15 : 0);
+  const coverage = hit / c.length;
+  return coverage + (coverage === 1 && c.length >= 2 ? 0.1 : 0);
 }
+
+
 
 /** Every text that could be the label of a field, most specific first. */
 async function labelCandidates(page: Page, handle: ElementHandle<Element>): Promise<string[]> {
   return page.evaluate((el) => {
     const node = el as HTMLElement;
     const out: string[] = [];
+    // Google Forms labels every input with "Tu respuesta"; it says nothing.
+    const generic = /^(tu respuesta|your answer|respuesta|respuesta breve|respuesta larga|short answer|long answer|type your answer|escribe tu respuesta|respuesta corta)$/i;
     const push = (t?: string | null) => {
       const s = (t ?? "").replace(/\s+/g, " ").trim();
-      if (s && s.length < 140 && !out.includes(s)) out.push(s);
+      if (!s || s.length >= 140 || out.includes(s) || generic.test(s)) return;
+      out.push(s);
     };
 
     push(node.getAttribute("aria-label"));
@@ -54,6 +61,13 @@ async function labelCandidates(page: Page, handle: ElementHandle<Element>): Prom
 
     push(node.closest("label")?.textContent);
 
+    // Google Forms: the question is the heading of the list item.
+    const item = node.closest('[role="listitem"]');
+    if (item) {
+      const heading = item.querySelector('[role="heading"], .M7eMe');
+      if (heading?.textContent) push(heading.textContent);
+    }
+
     const prev = node.previousElementSibling as HTMLElement | null;
     if (prev && !prev.querySelector("input,textarea,select")) push(prev.textContent);
 
@@ -61,7 +75,7 @@ async function labelCandidates(page: Page, handle: ElementHandle<Element>): Prom
     let parent: HTMLElement | null = node.parentElement;
     for (let i = 0; i < 4 && parent; i++) {
       const text = (parent.innerText || "").trim();
-      if (text && text.length < 90) {
+      if (text && text.length < 180) {
         push(text);
         break;
       }
@@ -76,7 +90,11 @@ async function labelCandidates(page: Page, handle: ElementHandle<Element>): Prom
 /**
  * Fills every field it can confidently match. Never submits, never guesses.
  */
-export async function fillForm(page: Page, values: FillValue[]): Promise<{ filled: number; skipped: string[] }> {
+export async function fillForm(
+  page: Page,
+  values: FillValue[],
+  opts: { dryRun?: boolean } = {}
+): Promise<{ filled: number; skipped: string[]; matches: { label: string; value: string; score: number }[] }> {
   // tsx/esbuild injects a __name() helper into named functions; when a callback
   // is serialised into the browser that helper doesn't exist. Harmless shim.
   await page.evaluate("window.__name = window.__name || function (f) { return f };");
@@ -86,6 +104,7 @@ export async function fillForm(page: Page, values: FillValue[]): Promise<{ fille
 
   let filled = 0;
   const skipped: string[] = [];
+  const matches: { label: string; value: string; score: number }[] = [];
 
   for (const h of handles) {
     try {
@@ -109,7 +128,7 @@ export async function fillForm(page: Page, values: FillValue[]): Promise<{ fille
         }
       }
 
-      if (!best || best.s < 0.5) {
+      if (!best || best.s < 0.75) {
         skipped.push(candidates[0].slice(0, 60));
         continue;
       }
@@ -120,6 +139,8 @@ export async function fillForm(page: Page, values: FillValue[]): Promise<{ fille
         continue;
       }
 
+      matches.push({ label: candidates[0].slice(0, 70), value: best.value.label, score: Number(best.s.toFixed(2)) });
+      if (opts.dryRun) continue;
       await h.fill(best.value.value);
       filled++;
       if (process.env.PREFILL_DEBUG === "1") {
@@ -130,5 +151,5 @@ export async function fillForm(page: Page, values: FillValue[]): Promise<{ fille
     }
   }
 
-  return { filled, skipped };
+  return { filled, skipped, matches };
 }
