@@ -22,8 +22,8 @@ const program = db.prepare("SELECT * FROM programs WHERE id = ?").get(programId)
   | undefined;
 
 const draft = db
-  .prepare("SELECT content FROM application_drafts WHERE program_id = ? ORDER BY id DESC LIMIT 1")
-  .get(programId) as { content: string } | undefined;
+  .prepare("SELECT content, source FROM application_drafts WHERE program_id = ? ORDER BY id DESC LIMIT 1")
+  .get(programId) as { content: string; source: string | null } | undefined;
 
 const url = program?.applies_url || program?.contact_url;
 if (!program || !url || !draft) {
@@ -32,6 +32,7 @@ if (!program || !url || !draft) {
 }
 
 const answers = JSON.parse(draft.content) as { question: string; answer: string }[];
+const draftSource = draft.source;
 
 const profile = db.prepare("SELECT * FROM profile WHERE id = 1").get() as Record<string, string>;
 
@@ -55,7 +56,15 @@ const facts: FillValue[] = [
 
 const values: FillValue[] = [
   ...facts,
-  ...answers.map((a) => ({ label: a.question, value: a.answer })),
+  ...answers.map((a) => ({
+    label: a.question,
+    value: a.answer,
+    // A contact message goes into whichever box the form offers.
+    aliases:
+      draftSource === "contact"
+        ? ["mensaje", "motivacion", "motivación", "detalles", "comentario", "comentarios", "message", "details", "comments", "motivation", "contanos", "cuentanos"]
+        : undefined,
+  })),
 ];
 
 (async () => {

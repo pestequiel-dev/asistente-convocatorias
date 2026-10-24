@@ -3,6 +3,43 @@ import type { Profile, Program } from "./types";
 
 export type EmailDraft = { subject: string; body: string };
 
+/** Short message for a contact form: no subject, fits in a textarea. */
+export async function generateContactMessage(
+  program: Program,
+  profile: Profile,
+  docs: { label: string; content: string | null }[],
+  language: "es" | "en"
+): Promise<string> {
+  const links = [
+    profile.url,
+    profile.deck_url,
+    profile.linkedin,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const { json } = await chatJson<{ message: string }>(
+    `Escribís mensajes breves de founders a fondos de inversión para un formulario de contacto.
+Devolvés JSON {"message": "..."}. IDIOMA: ${language === "en" ? "inglés" : "español rioplatense"}.
+Entre 70 y 110 palabras, primera persona, sin saludos formales largos, sin adjetivos vacíos.
+No inventes datos; si falta algo, no lo menciones.`,
+    `Fondo: ${program.organization ?? program.title}
+Tesis: ${program.summary ?? ""}
+
+Startup: ${profile.name} — ${profile.description}
+Etapa: ${profile.stage} · Clientes: ${profile.customers ?? "?"} · País: ${profile.country}
+Ronda: ${profile.round_details || "(sin datos)"}
+Links: ${links || "(ninguno)"}
+
+Escribí el mensaje como ${profile.founder_name || "el fundador"}.
+Incluí: qué hace Mehmiro en una línea, la tracción, por qué encaja con la tesis del fondo, y los links.
+Terminá con una pregunta corta.`,
+    { maxTokens: 800, temperature: 0.4 }
+  );
+
+  return (json.message ?? "").slice(0, 1200);
+}
+
 /** A short cold email to a fund that asks for "your deck or blurb". */
 export async function generateEmail(
   program: Program,

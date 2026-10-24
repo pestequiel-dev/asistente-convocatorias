@@ -15,6 +15,7 @@ import { RecommendationCard } from "./recommendation";
 import { EvidenceSection } from "./evidence";
 import { DraftPanel } from "./draft-panel";
 import { EmailPanel } from "./email-panel";
+import { ContactPanel } from "./contact-panel";
 
 interface SourceRow {
   id: number;
@@ -412,6 +413,8 @@ export function ProgramDetail({ id }: { id: number }) {
               onChanged={load}
             />
           )}
+
+          {!p.applies_url && p.contact_url && <ContactPanel programId={p.id} url={p.contact_url} />}
 
           {!p.applies_url && p.contact && /@/.test(p.contact) && (
             <EmailPanel programId={p.id} to={p.contact} />
