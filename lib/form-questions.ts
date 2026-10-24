@@ -3,6 +3,9 @@ import { cdpPort, isCdpUp, profileDirFor } from "./cdp";
 
 const SKIP = /^(first name|last name|full name|name|e-?mails?|age|phone|mobile|city|country|company|organization|organisation|website|url|linkedin|twitter|github|portfolio|orgs?\b|schools?\b|the email|drag ?& ?drop|upload|resume|cv\b|how did you hear)/i;
 
+// Factual fields that belong to the profile, not to an essay answer.
+const DATA = /(ventas|revenue|monto|amount|tama[ñn]o (de )?ronda|round size|valorizaci|valuation|fecha|date|capital|cantidad de|number of|whatsapp|tel[eé]fono|pa[ií]s( origen)?|origen startup|sitio web|website|nombre de tu startup|founders?|mail|e-?mail)/i;
+
 export type FormReadResult =
   | { status: "ok"; questions: string[] }
   | { status: "login" }
@@ -93,7 +96,6 @@ async function readPage(page: import("playwright").Page, depth = 0): Promise<For
       const id = node.getAttribute("id");
       if (id) push(document.querySelector(`label[for="${CSS.escape(id)}"]`)?.textContent);
       push(node.closest("label")?.textContent);
-      push(node.getAttribute("placeholder"));
 
       const item = node.closest('[role="listitem"]');
       if (item) {
@@ -108,6 +110,9 @@ async function readPage(page: import("playwright").Page, depth = 0): Promise<For
         if (label?.textContent) push(label.textContent);
       }
 
+      // Placeholders are examples ("1. xyz@email.com - CEO"), never the question.
+      push(node.getAttribute("placeholder"));
+
       let parent: HTMLElement | null = node.parentElement;
       for (let i = 0; i < 6 && parent; i++) {
         const text = (parent.innerText || "").trim();
@@ -120,9 +125,16 @@ async function readPage(page: import("playwright").Page, depth = 0): Promise<For
         parent = parent.parentElement;
       }
 
-      const best = candidates.sort((a, b) => b.length - a.length)[0];
-      if (!best || best.length < 8) continue;
-      if (!isLongText && /(url|link|video|adjunt|archiv|file|portfolio|github|linkedin)/i.test(best)) continue;
+      // Priority order beats length: the label, not the example text.
+      const best = candidates.find((c) => {
+        if (c.length < 8) return false;
+        if (!isLongText && /(url|link|video|adjunt|archiv|file|portfolio|github|linkedin)/i.test(c)) return false;
+        return true;
+      });
+      if (!best) continue;
+      // Only long-answer fields are questions; the rest is profile data.
+      const looksLikeQuestion = isLongText || best.includes("?") || best.length > 45;
+      if (!looksLikeQuestion) continue;
 
       if (!out.includes(best)) out.push(best);
     }
@@ -132,6 +144,7 @@ async function readPage(page: import("playwright").Page, depth = 0): Promise<For
   const clean = questions
     .filter((q) => !SKIP.test(q.trim()))
     .filter((q) => !/(nunca envíes contraseñas|never submit passwords|se enviará una copia|borrar formulario|google forms|formularios de google)/i.test(q))
+    .filter((q) => !DATA.test(q))
     .slice(0, 20);
 
   // A landing page ("APLICA AQUÍ") is not the form: follow its button once.
