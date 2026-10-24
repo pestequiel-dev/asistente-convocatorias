@@ -184,6 +184,8 @@ export interface Profile {
   linkedin: string;
   phone: string;
   role: string;
+  deck_url: string;
+  round_details: string;
   legal_status: string;
   legal_structure_detail: string;
   can_invoice: string;

@@ -49,6 +49,8 @@ const facts: FillValue[] = [
   { label: "rol", aliases: ["role", "title", "position", "cargo", "puesto"], value: profile.role || "" },
   { label: "industria", aliases: ["industry", "sector", "vertical"], value: profile.sector || "" },
   { label: "tecnologia", aliases: ["technology", "tech", "stack"], value: profile.tech_stack || "" },
+  { label: "deck", aliases: ["deck", "pitch", "presentation"], value: profile.deck_url || "" },
+  { label: "ronda", aliases: ["raising", "round", "ask", "investment", "levanta", "ronda"], value: profile.round_details || "" },
 ].filter((f) => f.value);
 
 const values: FillValue[] = [

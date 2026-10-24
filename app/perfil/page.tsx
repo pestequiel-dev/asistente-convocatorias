@@ -8,7 +8,7 @@ import type { Profile } from "@/lib/types";
 type Form = Omit<Profile, "id" | "updated_at">;
 
 const EMPTY: Form = {
-  name: "", url: "", country: "", city: "", founder_name: "", founder_last: "", email: "", linkedin: "", phone: "", role: "", legal_status: "", legal_structure_detail: "", can_invoice: "", founded: "", stage: "", sector: "",
+  name: "", url: "", country: "", city: "", founder_name: "", founder_last: "", email: "", linkedin: "", phone: "", role: "", deck_url: "", round_details: "", legal_status: "", legal_structure_detail: "", can_invoice: "", founded: "", stage: "", sector: "",
   description: "", team_size: null, founders: null, revenue_usd: null, customers: null,
   languages: "", tech_stack: "", has_product: "", notes: "",
 };
@@ -213,6 +213,14 @@ export default function PerfilPage() {
             <div className="field">
               <label className="label">Teléfono</label>
               <input className="input" placeholder="+54 9 11 …" value={form.phone} onChange={(e) => set("phone", e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="label">Link del deck</label>
+              <input className="input" placeholder="https://…/mehmiro-deck.pdf" value={form.deck_url} onChange={(e) => set("deck_url", e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="label">Ronda</label>
+              <input className="input" placeholder="Pre-seed, USD 500k por 10%" value={form.round_details} onChange={(e) => set("round_details", e.target.value)} />
             </div>
             <div className="field">
               <label className="label">Ciudad</label>

@@ -13,7 +13,8 @@ export async function generateEmail(
   const links = [
     profile.url ? `Sitio: ${profile.url}` : "",
     profile.linkedin ? `LinkedIn fundador: ${profile.linkedin}` : "",
-    ...docs.filter((d) => /deck|pitch|presentaci/i.test(d.label)).map((d) => `Deck: ${d.label}`),
+    profile.deck_url ? `Deck: ${profile.deck_url}` : "",
+    ...docs.filter((d) => /deck|pitch|presentaci/i.test(d.label) && !profile.deck_url).map((d) => `Deck: ${d.label}`),
   ]
     .filter(Boolean)
     .join("\n");
@@ -32,12 +33,13 @@ Etapa: ${profile.stage}
 Clientes: ${profile.customers ?? "?"}
 Equipo: ${profile.team_size ?? "?"} personas
 País: ${profile.country}
+Ronda: ${profile.round_details || "(sin datos)"}
 
 Links disponibles:
 ${links || "(ninguno)"}
 
 Escribí el email como ${profile.founder_name || "el fundador"}.
-Incluí: una línea de qué hace Mehmiro, una de tracción, la etapa/ronda, y los links que existan.
+Incluí: una línea de qué hace Mehmiro, una de tracción, los detalles de la ronda (${profile.round_details || "[FALTA: monto de la ronda]"}), y los links que existan.
 Cerrá con una pregunta simple.`,
     { maxTokens: 1200, temperature: 0.4 }
   );
