@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
 import { getDb, nowIso } from "@/lib/db";
 import { generateDraft } from "@/lib/draft";
+import { extractFormQuestions } from "@/lib/form-questions";
 import type { Criterion, Profile, Program } from "@/lib/types";
+
+/** Very small language probe over what we crawled; enough to pick es/en. */
+function detectLanguage(text: string): "es" | "en" {
+  const en = (text.match(/\b(the|and|with|for|you|your|we|our|is|are|of|to|in|what|how)\b/gi) ?? []).length;
+  const es = (text.match(/\b(el|la|los|las|de|que|y|con|para|por|tu|su|es|son|en|del|una|como)\b/gi) ?? []).length;
+  return en > es * 1.15 && en > 8 ? "en" : "es";
+}
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 180;
@@ -53,13 +61,28 @@ export async function POST(_req: Request, ctx: Ctx) {
     .prepare("SELECT label, content FROM profile_docs ORDER BY id")
     .all() as { label: string; content: string | null }[];
 
+  const sources = db
+    .prepare("SELECT text FROM sources WHERE program_id = ? AND status = 'ok' ORDER BY id LIMIT 4")
+    .all(Number(id)) as { text: string | null }[];
+  const corpus = `${program.title ?? ""} ${program.summary ?? ""} ${sources.map((s) => s.text ?? "").join(" ")}`.slice(0, 12000);
+  const language =
+    /\bingl[eé]s\b/i.test(program.language ?? "") ? "en" : detectLanguage(corpus);
+
   try {
-    const answers = await generateDraft(program, profile, docs, criteria);
+    // Read the real form first, so the draft answers the questions that are
+    // actually asked instead of a generic template.
+    let formQuestions: string[] = [];
+    const formUrl = program.applies_url || program.contact_url;
+    if (formUrl) {
+      formQuestions = await extractFormQuestions(formUrl).catch(() => []);
+    }
+
+    const answers = await generateDraft(program, profile, docs, criteria, language, formQuestions);
     const info = db
       .prepare("INSERT INTO application_drafts (program_id, content, created_at) VALUES (?, ?, ?)")
       .run(Number(id), JSON.stringify(answers), nowIso());
     return NextResponse.json({
-      draft: { id: Number(info.lastInsertRowid), created_at: nowIso(), answers },
+      draft: { id: Number(info.lastInsertRowid), created_at: nowIso(), answers, language },
     });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });

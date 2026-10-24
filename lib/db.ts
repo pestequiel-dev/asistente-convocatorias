@@ -20,6 +20,9 @@ CREATE TABLE IF NOT EXISTS profile (
   url TEXT NOT NULL DEFAULT '',
   country TEXT NOT NULL DEFAULT '',
   city TEXT NOT NULL DEFAULT '',
+  founder_name TEXT NOT NULL DEFAULT '',
+  founder_last TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
   legal_status TEXT NOT NULL DEFAULT '',
   legal_structure_detail TEXT NOT NULL DEFAULT '',
   can_invoice TEXT NOT NULL DEFAULT '',
@@ -227,6 +230,9 @@ function migrate(db: Database.Database) {
     ["legal_structure_detail", "TEXT NOT NULL DEFAULT ''"],
     ["can_invoice", "TEXT NOT NULL DEFAULT ''"],
     ["city", "TEXT NOT NULL DEFAULT ''"],
+    ["founder_name", "TEXT NOT NULL DEFAULT ''"],
+    ["founder_last", "TEXT NOT NULL DEFAULT ''"],
+    ["email", "TEXT NOT NULL DEFAULT ''"],
   ];
   const programCols = (db.prepare("PRAGMA table_info(programs)").all() as { name: string }[]).map((c) => c.name);
   const programAdditions: [string, string][] = [

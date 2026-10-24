@@ -7,7 +7,7 @@
 import path from "node:path";
 import fs from "node:fs";
 import { getDb } from "../lib/db";
-import { fillForm } from "../lib/prefill";
+import { fillForm, type FillValue } from "../lib/prefill";
 
 const programId = Number(process.argv[2]);
 if (!programId) {
@@ -32,6 +32,24 @@ if (!program || !url || !draft) {
 
 const answers = JSON.parse(draft.content) as { question: string; answer: string }[];
 
+const profile = db.prepare("SELECT * FROM profile WHERE id = 1").get() as Record<string, string>;
+
+// Personal/company facts: many forms ask for these before the essay questions.
+const facts: FillValue[] = [
+  { label: "nombre", aliases: ["first name", "given name", "founder"], value: profile.founder_name || "" },
+  { label: "apellido", aliases: ["last name", "surname", "family name"], value: profile.founder_last || "" },
+  { label: "email", aliases: ["e-mail", "correo", "mail"], value: profile.email || "" },
+  { label: "ciudad", aliases: ["city", "town", "location"], value: profile.city || "" },
+  { label: "pais", aliases: ["country", "nation"], value: profile.country || "" },
+  { label: "empresa", aliases: ["company", "startup", "organization", "organisation"], value: profile.name || "" },
+  { label: "sitio web", aliases: ["website", "web", "url", "site"], value: profile.url || "" },
+].filter((f) => f.value);
+
+const values: FillValue[] = [
+  ...facts,
+  ...answers.map((a) => ({ label: a.question, value: a.answer })),
+];
+
 (async () => {
   const { chromium } = await import("playwright");
 
@@ -42,8 +60,34 @@ const answers = JSON.parse(draft.content) as { question: string; answer: string 
   ].filter(Boolean) as string[];
   const executablePath = fallbacks.find((p) => fs.existsSync(p));
 
-  const profileDir = path.join(process.cwd(), "data", "browser-profile");
+  // One profile per program: a shared directory gets locked by the first browser.
+  const profileDir = path.join(process.cwd(), "data", "browser-profile", `p${programId}`);
   fs.mkdirSync(profileDir, { recursive: true });
+
+  // Chromium leaves a SingletonLock behind if it dies. If the owner process is
+  // gone, the lock is stale and blocks every future launch.
+  try {
+    const lockFile = path.join(profileDir, "SingletonLock");
+    const target = fs.readlinkSync(lockFile);
+    const pid = Number(String(target).split("-").pop());
+    let alive = false;
+    if (pid) {
+      try {
+        process.kill(pid, 0);
+        alive = true;
+      } catch {
+        alive = false;
+      }
+    }
+    if (!alive) {
+      fs.rmSync(lockFile, { force: true });
+      fs.rmSync(path.join(profileDir, "SingletonSocket"), { force: true });
+      fs.rmSync(path.join(profileDir, "SingletonCookie"), { force: true });
+      console.log("lock viejo eliminado");
+    }
+  } catch {
+    /* no lock */
+  }
 
   const context = await chromium.launchPersistentContext(profileDir, {
     headless: process.env.PREFILL_HEADLESS === "1",
@@ -53,11 +97,12 @@ const answers = JSON.parse(draft.content) as { question: string; answer: string 
   });
 
   const page = context.pages()[0] ?? (await context.newPage());
+  await page.addInitScript({ content: "window.__name = window.__name || function (f) { return f };" });
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45_000 });
   await page.waitForTimeout(2500);
 
-  const { filled, skipped } = await fillForm(page, answers);
-  const summary = `prefill #${programId}: ${filled} campos completados, ${skipped.length} sin match`;
+  const { filled, skipped } = await fillForm(page, values);
+  const summary = `prefill #${programId}: ${filled} campos completados, ${skipped.length} sin match · ${skipped.slice(0, 6).join(" | ")}`;
   fs.appendFileSync(path.join(process.cwd(), "data", "prefill.log"), `[${new Date().toISOString()}] ${summary}\n`);
   console.log(summary);
 
@@ -72,6 +117,8 @@ const answers = JSON.parse(draft.content) as { question: string; answer: string 
     context.on("close", () => resolve());
   });
 })().catch((e) => {
-  console.error("prefill falló:", e);
+  const msg = `prefill #${programId} FALLÓ: ${(e as Error).message.slice(0, 400)}`;
+  fs.appendFileSync(path.join(process.cwd(), "data", "prefill.log"), `[${new Date().toISOString()}] ${msg}\n`);
+  console.error(msg);
   process.exit(1);
 });

@@ -8,7 +8,7 @@ import type { Profile } from "@/lib/types";
 type Form = Omit<Profile, "id" | "updated_at">;
 
 const EMPTY: Form = {
-  name: "", url: "", country: "", city: "", legal_status: "", legal_structure_detail: "", can_invoice: "", founded: "", stage: "", sector: "",
+  name: "", url: "", country: "", city: "", founder_name: "", founder_last: "", email: "", legal_status: "", legal_structure_detail: "", can_invoice: "", founded: "", stage: "", sector: "",
   description: "", team_size: null, founders: null, revenue_usd: null, customers: null,
   languages: "", tech_stack: "", has_product: "", notes: "",
 };
@@ -188,6 +188,19 @@ export default function PerfilPage() {
               <label className="label">País de operación</label>
               <input className="input" placeholder="Argentina" value={form.country} onChange={(e) => set("country", e.target.value)} />
               <span className="hint">Define elegibilidad geográfica.</span>
+            </div>
+            <div className="field">
+              <label className="label">Nombre del fundador/a</label>
+              <input className="input" placeholder="Nombre" value={form.founder_name} onChange={(e) => set("founder_name", e.target.value)} />
+              <span className="hint">Lo usan los formularios que piden datos personales.</span>
+            </div>
+            <div className="field">
+              <label className="label">Apellido</label>
+              <input className="input" value={form.founder_last} onChange={(e) => set("founder_last", e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="label">Email de contacto</label>
+              <input className="input" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
             </div>
             <div className="field">
               <label className="label">Ciudad</label>

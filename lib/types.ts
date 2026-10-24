@@ -177,6 +177,9 @@ export interface Profile {
   url: string;
   country: string;
   city: string;
+  founder_name: string;
+  founder_last: string;
+  email: string;
   legal_status: string;
   legal_structure_detail: string;
   can_invoice: string;

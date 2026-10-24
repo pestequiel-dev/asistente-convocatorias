@@ -7,6 +7,17 @@ export interface DraftAnswer {
   missing: string | null;
 }
 
+const STANDARD_EN = [
+  "What problem do you solve?",
+  "How do you solve it? Describe the product.",
+  "What traction do you have today?",
+  "Who are your customers and how do you make money?",
+  "Who is the team and why are you the right people?",
+  "What is the market and why now?",
+  "What would you use the funding or the program's support for?",
+  "Why this program in particular?",
+];
+
 const STANDARD = [
   "¿Cuál es el problema que resuelven?",
   "¿Cómo lo resuelven? Describí el producto.",
@@ -22,7 +33,9 @@ export async function generateDraft(
   program: Program,
   profile: Profile,
   docs: { label: string; content: string | null }[],
-  criteria: Criterion[]
+  criteria: Criterion[],
+  language: "es" | "en" = "es",
+  formQuestions: string[] = []
 ): Promise<DraftAnswer[]> {
   if (!llmConfig()) throw new Error("Configurá DeepSeek en Ajustes para generar el borrador.");
 
@@ -32,13 +45,17 @@ export async function generateDraft(
     .join("\n\n")
     .slice(0, 9000);
 
-  const questions =
-    criteria.length > 0
+  const questions = formQuestions.length
+    ? formQuestions
+    : criteria.length > 0
       ? criteria.slice(0, 12).map((c) => c.text)
       : [];
 
   const { json } = await chatJson<{ answers: { question: string; answer: string; missing?: string }[] }>(
-    `Sos el fundador de Mehmiro escribiendo respuestas de postulación, en español rioplatense, primera persona, tono directo y concreto.
+    `${language === "en"
+      ? "You are Mehmiro's founder writing application answers, in English, first person, direct and concrete tone."
+      : "Sos el fundador de Mehmiro escribiendo respuestas de postulación, en español rioplatense, primera persona, tono directo y concreto."}
+IDIOMA OBLIGATORIO: ${language === "en" ? "inglés (todas las preguntas y respuestas)" : "español rioplatense"}. Si el programa está en inglés, TODO va en inglés.
 REGLAS:
 - Usá SOLO la información del perfil, los hitos y los documentos. NUNCA inventes métricas, clientes, fechas ni montos.
 - Si un dato necesario no está, escribí literalmente "[FALTA: qué dato]" dentro de la respuesta en vez de rellenar.
@@ -61,8 +78,9 @@ PROGRAMA AL QUE POSTULA:
 DOCUMENTOS E HITOS:
 ${context || "(sin documentos cargados)"}
 
-PREGUNTAS SUGERIDAS (usalas si no hay mejores):
-${STANDARD.join("\n")}`,
+${formQuestions.length
+      ? `PREGUNTAS EXACTAS DEL FORMULARIO (respondé estas, en este orden, copiando el texto tal cual):\n${formQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`
+      : `PREGUNTAS SUGERIDAS (usalas si no hay mejores):\n${(language === "en" ? STANDARD_EN : STANDARD).join("\n")}`}`,
     { maxTokens: 4500 }
   );
 
