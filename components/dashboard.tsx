@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight, Download, Inbox, Plus, RefreshCw, Search, Sparkles, TriangleAlert, Check, X, Trash2,
@@ -46,6 +46,33 @@ export function Dashboard({ programs, profileName, hasKey, mode }: Props) {
   const [view, setView] = useState<"timeline" | "table">("timeline");
   const [minFit, setMinFit] = useState(0);
   const [order, setOrder] = useState<"recent" | "fit_desc" | "fit_asc">("recent");
+  const restored = useRef(false);
+
+  // Remember the filters between visits; defaults would silently hide records.
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("resumen-filtros") || "{}") as {
+        tab?: typeof tab;
+        minFit?: number;
+        order?: typeof order;
+      };
+      if (saved.tab) setTab(saved.tab);
+      if (typeof saved.minFit === "number") setMinFit(saved.minFit);
+      if (saved.order) setOrder(saved.order);
+    } catch {
+      /* ignore */
+    }
+    restored.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!restored.current) return;
+    try {
+      localStorage.setItem("resumen-filtros", JSON.stringify({ tab, minFit, order }));
+    } catch {
+      /* ignore */
+    }
+  }, [tab, minFit, order]);
   const [showInbox, setShowInbox] = useState(false);
 
   useEffect(() => {
