@@ -99,7 +99,29 @@ const values: FillValue[] = [
 
   // If the user logged in through the CDP window, reuse that live browser.
   const port = cdpPort(programId);
-  const useCdp = await isCdpUp(port);
+  let useCdp = await isCdpUp(port);
+
+  // A window left open without CDP blocks the profile; close it, it's ours.
+  if (!useCdp) {
+    try {
+      const target = fs.readlinkSync(path.join(profileDir, "SingletonLock"));
+      const pid = Number(String(target).split("-").pop());
+      if (pid) {
+        try {
+          process.kill(pid, 0);
+          process.kill(pid, "SIGTERM");
+          await new Promise((r) => setTimeout(r, 1500));
+        } catch {
+          /* ya estaba muerto */
+        }
+      }
+      for (const f of ["SingletonLock", "SingletonSocket", "SingletonCookie"]) {
+        fs.rmSync(path.join(profileDir, f), { force: true });
+      }
+    } catch {
+      /* sin lock */
+    }
+  }
   const context = useCdp
     ? (await chromium.connectOverCDP(`http://127.0.0.1:${port}`)).contexts()[0]
     : await chromium.launchPersistentContext(profileDir, {
@@ -109,7 +131,15 @@ const values: FillValue[] = [
     // Google refuses to sign in when it detects automation. These remove the
     // obvious signals; it is still their call.
     ignoreDefaultArgs: ["--enable-automation"],
-    args: ["--no-first-run", "--no-default-browser-check", "--no-sandbox", "--disable-blink-features=AutomationControlled"],
+    args: [
+      "--no-first-run",
+      "--no-default-browser-check",
+      "--no-sandbox",
+      "--disable-blink-features=AutomationControlled",
+      // Keeps the window attachable, so a second click reuses it instead of
+      // colliding with the profile lock.
+      `--remote-debugging-port=${port}`,
+    ],
   });
 
   await context.addInitScript({
