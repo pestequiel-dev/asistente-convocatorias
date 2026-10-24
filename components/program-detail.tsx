@@ -392,7 +392,12 @@ export function ProgramDetail({ id }: { id: number }) {
             />
           )}
           {(isOpp || isInv) && (
-            <DraftPanel programId={p.id} appliesUrl={p.applies_url} contactUrl={p.contact_url} />
+            <DraftPanel
+              programId={p.id}
+              appliesUrl={p.applies_url}
+              contactUrl={p.contact_url}
+              onChanged={load}
+            />
           )}
           {p.summary && !isRef && (
             <section className="card">

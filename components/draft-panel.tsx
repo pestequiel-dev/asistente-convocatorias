@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Copy, Check, FileSignature, RefreshCw, ExternalLink, AlertTriangle, MonitorUp } from "lucide-react";
+import {
+  Copy, Check, FileSignature, RefreshCw, ExternalLink, AlertTriangle, MonitorUp, Save, Send,
+} from "lucide-react";
 
 interface Answer {
   question: string;
@@ -13,18 +15,23 @@ export function DraftPanel({
   programId,
   appliesUrl,
   contactUrl,
+  onChanged,
 }: {
   programId: number;
   appliesUrl: string | null;
   contactUrl: string | null;
+  onChanged?: () => void | Promise<void>;
 }) {
   const [answers, setAnswers] = useState<Answer[] | null>(null);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<number | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [prefilling, setPrefilling] = useState(false);
   const [prefillMsg, setPrefillMsg] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/programs/${programId}/draft`, { cache: "no-store" });
@@ -48,6 +55,47 @@ export function DraftPanel({
       if (!res.ok) throw new Error(data.error || "No se pudo generar");
       setAnswers(data.draft.answers);
       setCreatedAt(data.draft.created_at);
+      setDirty(false);
+      setSubmitted(null);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function save() {
+    if (!answers) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/programs/${programId}/draft`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers }),
+      });
+      if (!res.ok) throw new Error("No se pudo guardar");
+      setDirty(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1800);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function markSubmitted() {
+    if (!answers) return;
+    setBusy(true);
+    setError(null);
+    try {
+      if (dirty) await save();
+      const res = await fetch(`/api/programs/${programId}/draft/submit`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "No se pudo guardar");
+      setSubmitted(data.doc?.label ?? "Guardada");
+      await onChanged?.();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -74,23 +122,23 @@ export function DraftPanel({
           <h2>Borrador de postulación</h2>
           <div className="tiny muted" style={{ marginTop: 2 }}>
             {answers
-              ? `${answers.length} respuestas · generado ${createdAt ? new Date(createdAt).toLocaleString("es-AR") : ""}`
+              ? `${answers.length} respuestas · ${createdAt ? new Date(createdAt).toLocaleString("es-AR") : ""}`
               : "Respuestas redactadas con tu perfil, hitos y documentos"}
           </div>
         </div>
         <div className="row" style={{ gap: 8 }}>
           {answers && (
-            <button className="btn btn-sm" onClick={generate} disabled={busy}>
-              <RefreshCw size={13} /> Regenerar
-            </button>
+            <>
+              <button className="btn btn-sm" onClick={generate} disabled={busy}>
+                <RefreshCw size={13} /> Regenerar
+              </button>
+              <button className="btn btn-sm" onClick={save} disabled={busy || !dirty}>
+                {saved ? <Check size={13} /> : <Save size={13} />} {saved ? "Guardado" : "Guardar"}
+              </button>
+            </>
           )}
           {(appliesUrl || contactUrl) && (
-            <a
-              className="btn btn-sm"
-              href={(appliesUrl || contactUrl) as string}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a className="btn btn-sm" href={(appliesUrl || contactUrl) as string} target="_blank" rel="noreferrer">
               Abrir formulario <ExternalLink size={13} />
             </a>
           )}
@@ -102,6 +150,7 @@ export function DraftPanel({
                 setPrefilling(true);
                 setPrefillMsg(null);
                 try {
+                  if (dirty) await save();
                   const res = await fetch(`/api/programs/${programId}/prefill`, { method: "POST" });
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.error || "No se pudo abrir");
@@ -127,7 +176,7 @@ export function DraftPanel({
             <p className="small muted" style={{ marginBottom: 12 }}>
               Genero un borrador con las respuestas típicas (problema, solución, tracción, equipo, mercado, uso de
               fondos y por qué este programa). No inventa datos: donde falta información escribe{" "}
-              <code>[FALTA: …]</code> para que lo completes vos. Después abrís el formulario y pegás.
+              <code>[FALTA: …]</code>. Después lo editás, lo abrís pre-cargado y lo enviás vos.
             </p>
             <button className="btn btn-primary" onClick={generate} disabled={busy}>
               {busy ? <span className="spinner" /> : <FileSignature size={15} />}
@@ -138,12 +187,22 @@ export function DraftPanel({
 
         {answers && (
           <>
+            {submitted && (
+              <div className="banner banner-ok" style={{ marginBottom: 14 }}>
+                <Check size={15} style={{ flex: "none", marginTop: 2 }} />
+                <div>
+                  Guardada como documento de ejemplo: <strong>{submitted}</strong>. La próxima postulación va a
+                  imitar su tono y estructura.
+                </div>
+              </div>
+            )}
+
             {missing > 0 && (
               <div className="banner banner-warn" style={{ marginBottom: 14 }}>
                 <AlertTriangle size={15} style={{ flex: "none", marginTop: 2 }} />
                 <div>
-                  Hay {missing} respuesta(s) con datos faltantes marcados como <code>[FALTA: …]</code>. Completalos
-                  antes de enviar.
+                  Hay {missing} respuesta(s) con <code>[FALTA: …]</code>. Completalas acá y volvé a abrir el
+                  formulario, o directamente en el formulario.
                 </div>
               </div>
             )}
@@ -158,9 +217,28 @@ export function DraftPanel({
                       {copied === i ? "Copiado" : "Copiar"}
                     </button>
                   </div>
-                  <p className="draft-a">{a.answer}</p>
+                  <textarea
+                    className="textarea draft-edit"
+                    value={a.answer}
+                    onChange={(e) => {
+                      const next = [...answers];
+                      next[i] = { ...a, answer: e.target.value };
+                      setAnswers(next);
+                      setDirty(true);
+                    }}
+                  />
                 </div>
               ))}
+            </div>
+
+            <div className="row-between wrap" style={{ marginTop: 16, gap: 10 }}>
+              <span className="tiny muted" style={{ maxWidth: 460 }}>
+                Cuando la envíes, marcala acá: se guarda esta versión como documento de ejemplo (“Aplicación
+                anterior”) y el programa pasa a “Aplicada”.
+              </span>
+              <button className="btn btn-primary" onClick={markSubmitted} disabled={busy || !!submitted}>
+                <Send size={15} /> Ya la envié
+              </button>
             </div>
 
             {prefillMsg && (
@@ -175,11 +253,6 @@ export function DraftPanel({
                 </div>
               </div>
             )}
-
-            <p className="tiny muted" style={{ marginTop: 14 }}>
-              Revisalo antes de enviar. La IA trabaja con tus documentos, pero la responsabilidad de lo que se envía
-              es tuya.
-            </p>
           </>
         )}
       </div>

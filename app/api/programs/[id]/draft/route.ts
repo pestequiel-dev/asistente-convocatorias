@@ -18,6 +18,29 @@ export async function GET(_req: Request, ctx: Ctx) {
   return NextResponse.json({ draft: { id: row.id, created_at: row.created_at, answers: JSON.parse(row.content) } });
 }
 
+export async function PATCH(req: Request, ctx: Ctx) {
+  const { id } = await ctx.params;
+  const body = (await req.json().catch(() => ({}))) as { answers?: unknown };
+  if (!Array.isArray(body.answers)) return NextResponse.json({ error: "Faltan las respuestas" }, { status: 400 });
+
+  const db = getDb();
+  const row = db
+    .prepare("SELECT id FROM application_drafts WHERE program_id = ? ORDER BY id DESC LIMIT 1")
+    .get(Number(id)) as { id: number } | undefined;
+  if (!row) return NextResponse.json({ error: "No hay borrador para guardar" }, { status: 404 });
+
+  const clean = (body.answers as { question?: string; answer?: string }[])
+    .map((a) => ({
+      question: String(a.question ?? "").slice(0, 200),
+      answer: String(a.answer ?? "").slice(0, 3000),
+      missing: null,
+    }))
+    .filter((a) => a.question);
+
+  db.prepare("UPDATE application_drafts SET content = ? WHERE id = ?").run(JSON.stringify(clean), row.id);
+  return NextResponse.json({ ok: true });
+}
+
 export async function POST(_req: Request, ctx: Ctx) {
   const { id } = await ctx.params;
   const db = getDb();

@@ -1368,3 +1368,13 @@ textarea:focus-visible {
   color: var(--text-2);
   white-space: pre-wrap;
 }
+
+.draft-edit {
+  width: 100%;
+  min-height: 96px;
+  font-size: calc(14px * var(--fs));
+  line-height: 1.6;
+  background: var(--surface);
+  border-color: var(--border);
+  resize: vertical;
+}
