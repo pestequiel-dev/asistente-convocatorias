@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import path from "node:path";
 import { getDb, nowIso } from "@/lib/db";
 import { generateDraft } from "@/lib/draft";
 import { extractFormQuestions } from "@/lib/form-questions";
@@ -52,8 +51,12 @@ export async function PATCH(req: Request, ctx: Ctx) {
   return NextResponse.json({ ok: true });
 }
 
-export async function POST(_req: Request, ctx: Ctx) {
+export async function POST(req: Request, ctx: Ctx) {
   const { id } = await ctx.params;
+  const body = (await req.json().catch(() => ({}))) as { questions?: unknown };
+  const manual = Array.isArray(body.questions)
+    ? body.questions.map((q) => String(q).trim()).filter((q) => q.length > 3).slice(0, 20)
+    : [];
   const db = getDb();
   const program = db.prepare("SELECT * FROM programs WHERE id = ?").get(Number(id)) as Program | undefined;
   if (!program) return NextResponse.json({ error: "No encontrada" }, { status: 404 });
@@ -77,11 +80,15 @@ export async function POST(_req: Request, ctx: Ctx) {
     let formQuestions: string[] = [];
     let source: "form" | "generic" | "login" = "generic";
     const formUrl = program.applies_url || program.contact_url;
-    if (formUrl) {
+
+    if (manual.length) {
+      // The user pasted the questions by hand (login-walled forms).
+      formQuestions = manual;
+      source = "form";
+    } else if (formUrl) {
       // Reuse the program's browser profile: if the user logged in there once,
       // we can read a form that requires a session.
-      const profileDir = path.join(process.cwd(), "data", "browser-profile", `p${id}`);
-      const read = await extractFormQuestions(formUrl, profileDir).catch(() => null);
+      const read = await extractFormQuestions(formUrl, Number(id)).catch(() => null);
       if (read?.status === "ok") {
         formQuestions = read.questions;
         source = "form";
@@ -90,12 +97,19 @@ export async function POST(_req: Request, ctx: Ctx) {
       }
     }
 
-    const answers = await generateDraft(program, profile, docs, criteria, language, formQuestions);
+    // If the form itself is in English, the answers must be too.
+    let finalLanguage = language;
+    if (formQuestions.length) {
+      const en = (formQuestions.join(" ").match(/\b(the|your|what|why|which|have|you|is|are|of|to)\b/gi) ?? []).length;
+      if (en > formQuestions.length * 1.2) finalLanguage = "en";
+    }
+
+    const answers = await generateDraft(program, profile, docs, criteria, finalLanguage, formQuestions);
     const info = db
       .prepare("INSERT INTO application_drafts (program_id, content, source, created_at) VALUES (?, ?, ?, ?)")
       .run(Number(id), JSON.stringify(answers), source, nowIso());
     return NextResponse.json({
-      draft: { id: Number(info.lastInsertRowid), created_at: nowIso(), answers, language, source },
+      draft: { id: Number(info.lastInsertRowid), created_at: nowIso(), answers, language: finalLanguage, source },
     });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });

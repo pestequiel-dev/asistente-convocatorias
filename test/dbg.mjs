@@ -1,0 +1,11 @@
+import { chromium } from "playwright";
+const browser = await chromium.connectOverCDP("http://127.0.0.1:9527");
+const ctx = browser.contexts()[0];
+const page = await ctx.newPage();
+await page.goto("https://example.com", { waitUntil: "domcontentloaded" });
+await page.evaluate("window.__name = window.__name || function (f) { return f };");
+const t1 = await page.evaluate(() => typeof window.__name);
+const t2 = await page.evaluate(() => { const f = (x) => x; return typeof __name; });
+console.log("window.__name:", t1, "| bare __name:", t2);
+await page.close();
+process.exit(0);

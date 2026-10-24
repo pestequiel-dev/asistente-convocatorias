@@ -37,6 +37,8 @@ export function DraftPanel({
   const [submitted, setSubmitted] = useState<string | null>(null);
   const [loginBusy, setLoginBusy] = useState(false);
   const [loginMsg, setLoginMsg] = useState<string | null>(null);
+  const [showPaste, setShowPaste] = useState(false);
+  const [pasteText, setPasteText] = useState("");
   const refs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
   const load = useCallback(async () => {
@@ -104,6 +106,35 @@ export function DraftPanel({
       if (!res.ok) throw new Error(data.error || "No se pudo guardar");
       setSubmitted(data.doc?.label ?? "Guardada");
       await onChanged?.();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function generateWithQuestions() {
+    const questions = pasteText
+      .split("\n")
+      .map((q) => q.trim())
+      .filter((q) => q.length > 3);
+    if (!questions.length) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/programs/${programId}/draft`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ questions }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "No se pudo generar");
+      setAnswers(data.draft.answers);
+      setCreatedAt(data.draft.created_at);
+      setSource(data.draft.source ?? null);
+      setShowPaste(false);
+      setPasteText("");
+      setDirty(false);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -245,7 +276,7 @@ export function DraftPanel({
                           const data = await res.json();
                           if (!res.ok) throw new Error(data.error || "No se pudo abrir");
                           setLoginMsg(
-                            "Se abrió una ventana. Iniciá sesión con Google, esperá a ver el formulario y CERRALA. Después tocá “Regenerar”."
+                            "Se abrió una ventana de Brave en modo normal (sin automatización). Iniciá sesión ahí, esperá a ver el formulario y volvé acá a tocar “Regenerar”. Podés dejarla abierta."
                           );
                         } catch (e) {
                           setLoginMsg((e as Error).message);
@@ -262,6 +293,38 @@ export function DraftPanel({
                   </div>
                   {loginMsg && <div className="small" style={{ marginTop: 8 }}>{loginMsg}</div>}
                 </div>
+              </div>
+            )}
+
+            {answers && (source === "login" || source === "generic") && (
+              <div style={{ marginBottom: 14 }}>
+                <button type="button" className="btn btn-sm" onClick={() => setShowPaste((v) => !v)}>
+                  {showPaste ? "Cerrar" : "Pegar las preguntas del formulario a mano"}
+                </button>
+                {showPaste && (
+                  <div className="stack" style={{ gap: 8, marginTop: 10 }}>
+                    <textarea
+                      className="textarea"
+                      style={{ minHeight: 110 }}
+                      placeholder={"Una pregunta por línea:\n¿Cuál es el problema que resuelven?\n¿Qué tracción tienen?"}
+                      value={pasteText}
+                      onChange={(e) => setPasteText(e.target.value)}
+                    />
+                    <div className="row-between">
+                      <span className="tiny muted">
+                        Copiá las preguntas del formulario en tu navegador y pegalas acá. Es la vía que nunca falla.
+                      </span>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={generateWithQuestions}
+                        disabled={busy || !pasteText.trim()}
+                      >
+                        {busy ? <span className="spinner" /> : <FileSignature size={13} />} Generar con estas
+                        preguntas
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

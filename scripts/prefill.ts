@@ -7,6 +7,7 @@
 import path from "node:path";
 import fs from "node:fs";
 import { getDb } from "../lib/db";
+import { cdpPort, isCdpUp } from "../lib/cdp";
 import { fillForm, type FillValue } from "../lib/prefill";
 
 const programId = Number(process.argv[2]);
@@ -89,11 +90,25 @@ const values: FillValue[] = [
     /* no lock */
   }
 
-  const context = await chromium.launchPersistentContext(profileDir, {
+  // If the user logged in through the CDP window, reuse that live browser.
+  const port = cdpPort(programId);
+  const useCdp = await isCdpUp(port);
+  const context = useCdp
+    ? (await chromium.connectOverCDP(`http://127.0.0.1:${port}`)).contexts()[0]
+    : await chromium.launchPersistentContext(profileDir, {
     headless: process.env.PREFILL_HEADLESS === "1",
     executablePath,
     viewport: { width: 1360, height: 940 },
-    args: ["--no-first-run", "--no-default-browser-check"],
+    // Google refuses to sign in when it detects automation. These remove the
+    // obvious signals; it is still their call.
+    ignoreDefaultArgs: ["--enable-automation"],
+    args: ["--no-first-run", "--no-default-browser-check", "--no-sandbox", "--disable-blink-features=AutomationControlled"],
+  });
+
+  await context.addInitScript({
+    content:
+      "Object.defineProperty(navigator, 'webdriver', { get: () => undefined });" +
+      "window.chrome = window.chrome || { runtime: {} };",
   });
 
   const page = context.pages()[0] ?? (await context.newPage());
@@ -108,7 +123,7 @@ const values: FillValue[] = [
 
   if (process.env.PREFILL_HEADLESS === "1") {
     await page.screenshot({ path: path.join(process.cwd(), "data", "prefill.png"), fullPage: true });
-    await context.close();
+    if (!useCdp) await context.close();
     process.exit(0);
   }
 
