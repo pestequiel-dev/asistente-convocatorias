@@ -41,7 +41,7 @@ function loadDocs(): { label: string; url: string; content: string | null }[] {
 
 function maxPagesFor(kind: string): number {
   const configured = Number(getSetting("max_pages") || 24) || 24;
-  if (kind === "referencia") return 1;
+  if (kind === "referencia") return 4;
   if (kind === "evento" || kind === "competidor" || kind === "inversor") return Math.min(8, configured);
   return configured;
 }

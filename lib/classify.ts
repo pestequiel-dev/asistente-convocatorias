@@ -38,7 +38,7 @@ export async function fetchPreview(url: string): Promise<Preview> {
       .replace(/&[a-z]+;/gi, " ")
       .replace(/\s+/g, " ")
       .trim()
-      .slice(0, 4000);
+      .slice(0, 8000);
 
     return { text, title, description: description?.slice(0, 400) ?? null };
   } catch {
@@ -93,6 +93,9 @@ const KIND_LABEL: Record<Kind, string> = {
   referencia: "referencia (nota, artículo, recurso, ruido)",
 };
 
+/** Unmistakable "this is a call" wording: overrides a wrong model verdict. */
+const OPPORTUNITY = /(grant opportunity|call for proposals|call for applications|request for proposals|request for applications|applications? (?:are |is )?open|apply by|application deadline|deadline to apply|funding opportunity|\brfps?\b|grant program|grant of up to|awards? of up to|submit your (?:proposal|application))/i;
+
 const BUSINESS = /(edtech|educaci[oó]n|educativ|escuela|colegio|docente|universidad|aula|ense[ñn]anza|aprendizaje|startup|emprendedor|emprendimiento|inversi[oó]n|inversor|venture|\bvc\b|fondo|aceleradora|incubadora|inteligencia artificial|\bia\b|funding|capital semilla|latam|latinoam[eé]rica|iberoam[eé]rica)/i;
 
 function heuristic(url: string, pasted: string, preview: string): Classification {
@@ -120,7 +123,11 @@ function heuristic(url: string, pasted: string, preview: string): Classification
   const best = ranked[0];
   const top = scores[best];
 
-  const relevant = best !== "referencia" || BUSINESS.test(corpus);
+  const opportunityHit = OPPORTUNITY.exec(corpus);
+  let bestKind: Kind = best;
+  if (opportunityHit && best !== "competidor") bestKind = "convocatoria";
+
+  const relevant = bestKind !== "referencia" || BUSINESS.test(corpus);
 
   if (top === 0) {
     return {
@@ -138,7 +145,7 @@ function heuristic(url: string, pasted: string, preview: string): Classification
   const confidence = Math.min(0.9, 0.35 + top * 0.08 + (top - second) * 0.05);
   const signals = hits[best].slice(0, 3).map((h) => `“${h}”`).join(", ");
   return {
-    kind: best,
+    kind: bestKind,
     confidence: Number(confidence.toFixed(2)),
     reason: `Señales detectadas: ${signals || "contenido del sitio"}.`,
     relevant,
@@ -187,10 +194,23 @@ ${input.preview.slice(0, 3000) || "(no se pudo leer)"}`,
     const kind = (["convocatoria", "evento", "competidor", "inversor", "referencia"] as const).includes(json.kind as Kind)
       ? (json.kind as Kind)
       : fallback.kind;
+    // A model that reads "Grant Opportunity Available" and answers "referencia"
+    // is simply wrong; the wording is stronger evidence than its judgement.
+    const opportunityHit = OPPORTUNITY.exec(`${input.pasted}\n${input.preview}`);
+    const finalKind: Kind = opportunityHit && kind !== "competidor" ? "convocatoria" : kind;
+
     return {
-      kind,
-      confidence: typeof json.confidence === "number" ? Math.max(0, Math.min(1, json.confidence)) : fallback.confidence,
-      reason: (json.reason || fallback.reason).slice(0, 240),
+      kind: finalKind,
+      confidence:
+        finalKind !== kind
+          ? Math.max(0.8, typeof json.confidence === "number" ? json.confidence : 0.8)
+          : typeof json.confidence === "number"
+            ? Math.max(0, Math.min(1, json.confidence))
+            : fallback.confidence,
+      reason:
+        finalKind !== kind
+          ? `Menciona una convocatoria explícita ("${opportunityHit![0]}").`.slice(0, 240)
+          : (json.reason || fallback.reason).slice(0, 240),
       relevant: typeof json.relevant === "boolean" ? json.relevant : kind !== "referencia" || fallback.relevant,
       relevance_reason: (json.relevance_reason || fallback.relevance_reason).slice(0, 200),
     };

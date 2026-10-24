@@ -68,6 +68,11 @@ const HIGH_VALUE = [
   /rules/i,
   /terms/i,
   /legal/i,
+  /grant/i,
+  /opportunit/i,
+  /\brfps?\b/i,
+  /proposal/i,
+  /funding/i,
 ];
 
 const APPLY_VALUE = [
