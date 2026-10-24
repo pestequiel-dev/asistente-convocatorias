@@ -20,10 +20,12 @@ export async function GET(_req: Request, ctx: Ctx) {
   const { id } = await ctx.params;
   const db = getDb();
   const row = db
-    .prepare("SELECT id, content, created_at FROM application_drafts WHERE program_id = ? ORDER BY id DESC LIMIT 1")
-    .get(Number(id)) as { id: number; content: string; created_at: string } | undefined;
+    .prepare("SELECT id, content, source, created_at FROM application_drafts WHERE program_id = ? ORDER BY id DESC LIMIT 1")
+    .get(Number(id)) as { id: number; content: string; source: string | null; created_at: string } | undefined;
   if (!row) return NextResponse.json({ draft: null });
-  return NextResponse.json({ draft: { id: row.id, created_at: row.created_at, answers: JSON.parse(row.content) } });
+  return NextResponse.json({
+    draft: { id: row.id, created_at: row.created_at, source: row.source, answers: JSON.parse(row.content) },
+  });
 }
 
 export async function PATCH(req: Request, ctx: Ctx) {
@@ -78,11 +80,12 @@ export async function POST(_req: Request, ctx: Ctx) {
     }
 
     const answers = await generateDraft(program, profile, docs, criteria, language, formQuestions);
+    const source = formQuestions.length ? "form" : "generic";
     const info = db
-      .prepare("INSERT INTO application_drafts (program_id, content, created_at) VALUES (?, ?, ?)")
-      .run(Number(id), JSON.stringify(answers), nowIso());
+      .prepare("INSERT INTO application_drafts (program_id, content, source, created_at) VALUES (?, ?, ?, ?)")
+      .run(Number(id), JSON.stringify(answers), source, nowIso());
     return NextResponse.json({
-      draft: { id: Number(info.lastInsertRowid), created_at: nowIso(), answers, language },
+      draft: { id: Number(info.lastInsertRowid), created_at: nowIso(), answers, language, source },
     });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });

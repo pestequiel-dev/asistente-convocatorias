@@ -131,6 +131,7 @@ CREATE TABLE IF NOT EXISTS application_drafts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   program_id INTEGER NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
+  source TEXT,
   created_at TEXT NOT NULL
 );
 
@@ -254,6 +255,9 @@ function migrate(db: Database.Database) {
 
   const criteriaCols = (db.prepare("PRAGMA table_info(criteria)").all() as { name: string }[]).map((c) => c.name);
   if (!criteriaCols.includes("user_note")) db.exec("ALTER TABLE criteria ADD COLUMN user_note TEXT");
+
+  const draftCols = (db.prepare("PRAGMA table_info(application_drafts)").all() as { name: string }[]).map((c) => c.name);
+  if (!draftCols.includes("source")) db.exec("ALTER TABLE application_drafts ADD COLUMN source TEXT");
   for (const [name, def] of additions) {
     if (!cols.includes(name)) db.exec(`ALTER TABLE profile ADD COLUMN ${name} ${def}`);
   }

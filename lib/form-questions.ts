@@ -28,6 +28,9 @@ export async function extractFormQuestions(url: string): Promise<string[]> {
 
       for (const el of Array.from(fields)) {
         const node = el as HTMLElement;
+        const tag = node.tagName.toLowerCase();
+        const type = (node.getAttribute("type") || "").toLowerCase();
+        if (["file", "url", "tel", "number", "checkbox", "radio", "submit"].includes(type)) continue;
         const candidates: string[] = [];
         const push = (t?: string | null) => {
           const s = (t ?? "").replace(/\s+/g, " ").trim();
@@ -52,7 +55,18 @@ export async function extractFormQuestions(url: string): Promise<string[]> {
 
         // Prefer the longest candidate: it is usually the full question.
         const best = candidates.sort((a, b) => b.length - a.length)[0];
-        if (best && best.length > 12 && !out.includes(best)) out.push(best);
+        const minLen = tag === "textarea" ? 5 : 13;
+        if (!best || best.length < minLen) continue;
+
+        // URL / file fields are data, not questions.
+        if (tag !== "textarea" && /(url|link|video|adjunt|archiv|file|portfolio|github|linkedin)/i.test(best)) continue;
+
+        // Only long-answer fields are actual questions; "Nombre" or "Ciudad" are
+        // data the profile already provides.
+        const looksLikeQuestion = tag === "textarea" || best.includes("?") || best.length > 45;
+        if (!looksLikeQuestion) continue;
+
+        if (!out.includes(best)) out.push(best);
       }
       return out;
     });

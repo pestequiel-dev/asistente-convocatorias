@@ -42,7 +42,6 @@ const FORM_HOSTS = [
   "form.jotform.com",
   "tally.so",
   "surveymonkey.com",
-  "google.com",
 ];
 
 const SOCIAL_HOSTS = [
@@ -124,7 +123,14 @@ function registrable(h: string) {
   return parts.slice(-2).join(".");
 }
 
+const JUNK = /(recaptcha|hcaptcha|turnstile|gstatic|googleapis|doubleclick|googletagmanager|google-analytics|gtag\/js|facebook\.com\/tr|hotjar|segment\.io|intercom|drift\.com|cookiebot|onetrust|youtube\.com\/embed|maps\.google|fonts\.)/i;
+
+function isJunk(u: string) {
+  return JUNK.test(u);
+}
+
 function isFormHost(u: string) {
+  if (isJunk(u)) return false;
   const h = host(u);
   return FORM_HOSTS.some((f) => h === f || h.endsWith("." + f));
 }
@@ -313,9 +319,10 @@ export async function crawlSite(startUrl: string, opts: CrawlOptions = {}): Prom
             )
             .catch(() => [])) as { href: string; anchor: string }[];
 
-          if (!text || text.length < 60) {
-            html = await page.content().catch(() => "");
-          }
+          const embeddedFields = (await page
+            .evaluate(() => document.querySelectorAll("form input, form textarea, form select").length)
+            .catch(() => 0)) as number;
+          if (embeddedFields >= 3 && !isJunk(item.url)) formCandidates.add(item.url);
 
           if (text && text.length >= 60) {
             const normalized = text.slice(0, 60000);
@@ -349,6 +356,8 @@ export async function crawlSite(startUrl: string, opts: CrawlOptions = {}): Prom
               formCandidates.add(abs);
               continue;
             }
+
+            if (isJunk(abs)) continue;
 
             const blob = `${l.anchor} ${abs}`.toLowerCase();
             if (/contact|contacto|connect|partnership|colabor|sumate|involucr|hablar con|consulta/.test(blob)) {

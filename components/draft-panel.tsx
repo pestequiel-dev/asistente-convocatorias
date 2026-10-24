@@ -24,6 +24,7 @@ export function DraftPanel({
 }) {
   const [answers, setAnswers] = useState<Answer[] | null>(null);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
+  const [source, setSource] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<number | null>(null);
@@ -40,6 +41,7 @@ export function DraftPanel({
     if (data.draft) {
       setAnswers(data.draft.answers);
       setCreatedAt(data.draft.created_at);
+      setSource(data.draft.source ?? null);
     }
   }, [programId]);
 
@@ -56,6 +58,7 @@ export function DraftPanel({
       if (!res.ok) throw new Error(data.error || "No se pudo generar");
       setAnswers(data.draft.answers);
       setCreatedAt(data.draft.created_at);
+      setSource(data.draft.source ?? null);
       setDirty(false);
       setSubmitted(null);
     } catch (e) {
@@ -206,6 +209,17 @@ export function DraftPanel({
                 <div>
                   Guardada como documento de ejemplo: <strong>{submitted}</strong>. La próxima postulación va a
                   imitar su tono y estructura.
+                </div>
+              </div>
+            )}
+
+            {source === "generic" && (
+              <div className="banner banner-warn" style={{ marginBottom: 14 }}>
+                <AlertTriangle size={15} style={{ flex: "none", marginTop: 2 }} />
+                <div>
+                  <strong>No pude leer las preguntas del formulario.</strong> Estas respuestas son genéricas
+                  (problema, solución, tracción…), no lo que el formulario pide. Usalas como base para el campo de
+                  texto libre, o revisá que el link del formulario sea el correcto.
                 </div>
               </div>
             )}

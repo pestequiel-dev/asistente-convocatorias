@@ -332,12 +332,15 @@ async function saveOpportunity(
 
 /* ---------------------------------- evento -------------------------------- */
 
+const JUNK_URL = /(recaptcha|hcaptcha|turnstile|gstatic|googleapis|doubleclick|googletagmanager|google-analytics|facebook\.com\/tr|hotjar|youtube\.com\/embed)/i;
+
 function pickAction(formCandidates: string[], contactCandidates: string[], startUrl: string) {
+  const usable = formCandidates.filter((u) => !JUNK_URL.test(u));
   const apply =
-    formCandidates.find((u) => /airtable|typeform|forms\.|jotform|tally|google\.com\/forms/i.test(u)) ??
-    formCandidates[0] ??
+    usable.find((u) => /airtable|typeform|forms\.|jotform|tally|google\.com\/forms/i.test(u)) ??
+    usable[0] ??
     null;
-  const contact = contactCandidates.find((u) => u !== apply && u !== startUrl) ?? null;
+  const contact = contactCandidates.find((u) => u !== apply && u !== startUrl && !JUNK_URL.test(u)) ?? null;
   return { apply, contact };
 }
 
