@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Copy, Check, FileSignature, RefreshCw, ExternalLink, AlertTriangle, MonitorUp, Save, Send,
 } from "lucide-react";
@@ -32,6 +32,7 @@ export function DraftPanel({
   const [prefilling, setPrefilling] = useState(false);
   const [prefillMsg, setPrefillMsg] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<string | null>(null);
+  const refs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/programs/${programId}/draft`, { cache: "no-store" });
@@ -113,7 +114,19 @@ export function DraftPanel({
     }
   }
 
-  const missing = (answers ?? []).filter((a) => /\[FALTA:/i.test(a.answer)).length;
+  // Every "[FALTA: …]" marker, with the answer it belongs to.
+  const gaps = (answers ?? []).flatMap((a, i) =>
+    [...a.answer.matchAll(/\[FALTA:[^\]]*\]/gi)].map((m) => ({ i, question: a.question, token: m[0] }))
+  );
+
+  function goToGap(i: number, token: string) {
+    const el = refs.current[i];
+    if (!el) return;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    el.focus();
+    const at = el.value.indexOf(token);
+    if (at >= 0) el.setSelectionRange(at, at + token.length);
+  }
 
   return (
     <section className="card">
@@ -197,38 +210,81 @@ export function DraftPanel({
               </div>
             )}
 
-            {missing > 0 && (
+            {gaps.length > 0 && (
               <div className="banner banner-warn" style={{ marginBottom: 14 }}>
                 <AlertTriangle size={15} style={{ flex: "none", marginTop: 2 }} />
-                <div>
-                  Hay {missing} respuesta(s) con <code>[FALTA: …]</code>. Completalas acá y volvé a abrir el
-                  formulario, o directamente en el formulario.
+                <div style={{ flex: 1 }}>
+                  <strong>
+                    {gaps.length} dato{gaps.length === 1 ? "" : "s"} sin completar.
+                  </strong>{" "}
+                  Las respuestas de abajo son editables: tocá “Completar” y te lleva al lugar exacto.
+                  <div style={{ marginTop: 8, display: "grid", gap: 6 }}>
+                    {gaps.map((g, k) => (
+                      <div key={k} className="row-between wrap" style={{ gap: 8 }}>
+                        <span className="small" style={{ minWidth: 0 }}>
+                          {g.question.length > 70 ? `${g.question.slice(0, 70)}…` : g.question} —{" "}
+                          <em>{g.token.replace(/^\[FALTA:\s*/i, "").replace(/\]$/, "")}</em>
+                        </span>
+                        <button
+                          type="button"
+                          className="btn btn-sm"
+                          onClick={() => goToGap(g.i, g.token)}
+                        >
+                          Completar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
             <div className="stack" style={{ gap: 14 }}>
-              {answers.map((a, i) => (
-                <div key={i} className="draft-item">
-                  <div className="row-between" style={{ alignItems: "flex-start", gap: 10 }}>
-                    <div className="draft-q">{a.question}</div>
-                    <button className="btn btn-sm" onClick={() => copy(a.answer, i)} aria-label="Copiar respuesta">
-                      {copied === i ? <Check size={13} /> : <Copy size={13} />}
-                      {copied === i ? "Copiado" : "Copiar"}
-                    </button>
+              {answers.map((a, i) => {
+                const itemGaps = [...a.answer.matchAll(/\[FALTA:[^\]]*\]/gi)].map((m) => m[0]);
+                return (
+                  <div key={i} className={`draft-item${itemGaps.length ? " has-gap" : ""}`}>
+                    <div className="row-between" style={{ alignItems: "flex-start", gap: 10 }}>
+                      <div className="draft-q">{a.question}</div>
+                      <button className="btn btn-sm" onClick={() => copy(a.answer, i)} aria-label="Copiar respuesta">
+                        {copied === i ? <Check size={13} /> : <Copy size={13} />}
+                        {copied === i ? "Copiado" : "Copiar"}
+                      </button>
+                    </div>
+
+                    {itemGaps.length > 0 && (
+                      <div className="row wrap" style={{ gap: 6, marginBottom: 8 }}>
+                        {itemGaps.map((token, k) => (
+                          <button
+                            key={k}
+                            type="button"
+                            className="gap-chip"
+                            onClick={() => goToGap(i, token)}
+                            title="Ir al texto y seleccionarlo para reemplazarlo"
+                          >
+                            <AlertTriangle size={12} aria-hidden="true" />
+                            {token.replace(/^\[FALTA:\s*/i, "").replace(/\]$/, "")}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    <textarea
+                      ref={(el) => {
+                        refs.current[i] = el;
+                      }}
+                      className="textarea draft-edit"
+                      value={a.answer}
+                      onChange={(e) => {
+                        const next = [...answers];
+                        next[i] = { ...a, answer: e.target.value };
+                        setAnswers(next);
+                        setDirty(true);
+                      }}
+                    />
                   </div>
-                  <textarea
-                    className="textarea draft-edit"
-                    value={a.answer}
-                    onChange={(e) => {
-                      const next = [...answers];
-                      next[i] = { ...a, answer: e.target.value };
-                      setAnswers(next);
-                      setDirty(true);
-                    }}
-                  />
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="row-between wrap" style={{ marginTop: 16, gap: 10 }}>

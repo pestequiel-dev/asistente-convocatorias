@@ -1378,3 +1378,25 @@ textarea:focus-visible {
   border-color: var(--border);
   resize: vertical;
 }
+
+.draft-item.has-gap {
+  border-color: #f3d9b8;
+  background: #fffaf3;
+}
+
+.gap-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid #f3d9b8;
+  background: #fff;
+  color: var(--warn);
+  font-family: var(--font);
+  font-size: calc(12.3px * var(--fs));
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.gap-chip:hover { background: var(--warn-soft); border-color: var(--warn); }
