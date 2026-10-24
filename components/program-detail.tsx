@@ -14,6 +14,7 @@ import { buildRecommendation } from "@/lib/recommend";
 import { RecommendationCard } from "./recommendation";
 import { EvidenceSection } from "./evidence";
 import { DraftPanel } from "./draft-panel";
+import { EmailPanel } from "./email-panel";
 
 interface SourceRow {
   id: number;
@@ -407,6 +408,8 @@ export function ProgramDetail({ id }: { id: number }) {
               onChanged={load}
             />
           )}
+          {p.contact && /@/.test(p.contact) && <EmailPanel programId={p.id} to={p.contact} />}
+
           {p.summary && !isRef && (
             <section className="card">
               <div className="panel-head"><h2>Resumen</h2></div>

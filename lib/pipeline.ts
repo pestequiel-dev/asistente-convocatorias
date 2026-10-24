@@ -334,12 +334,29 @@ async function saveOpportunity(
 
 const JUNK_URL = /(recaptcha|hcaptcha|turnstile|gstatic|googleapis|doubleclick|googletagmanager|google-analytics|facebook\.com\/tr|hotjar|youtube\.com\/embed)/i;
 
+/** The LLM often skips the footer address; emails are easy to find deterministically. */
+function findEmail(pages: CrawledPage[]): string | null {
+  const text = pages.map((p) => p.text).join("\n");
+  const found = [...text.matchAll(/[\w.+-]+@[\w-]+\.[\w.]{2,}/g)]
+    .map((m) => m[0].replace(/[.,;:]+$/, ""))
+    .filter((e) => !/(example\.|sentry|wixpress|no-?reply|@2x|@3x|\.png$|\.jpg$)/i.test(e));
+  if (!found.length) return null;
+
+  // Prefer an address that appears near contact wording.
+  const preferred = found.find((e) => {
+    const at = text.indexOf(e);
+    return /(get in touch|contact|contacto|hello|hola|say@|reach out|escribinos)/i.test(text.slice(Math.max(0, at - 200), at + 60));
+  });
+  return preferred ?? found[0];
+}
+
 function pickAction(formCandidates: string[], contactCandidates: string[], startUrl: string) {
   const usable = formCandidates.filter((u) => !JUNK_URL.test(u));
-  const apply =
-    usable.find((u) => /airtable|typeform|forms\.|jotform|tally|google\.com\/forms/i.test(u)) ??
-    usable[0] ??
-    null;
+  // A "form" must look like one; /insights is a blog, not an application.
+  const looksLikeForm = (u: string) =>
+    /airtable|typeform|forms\.|jotform|tally|google\.com\/forms/i.test(u) ||
+    /(apply|postul|aplica|formulario|contact|inscri)/i.test(u);
+  const apply = usable.find(looksLikeForm) ?? null;
   const contact = contactCandidates.find((u) => u !== apply && u !== startUrl && !JUNK_URL.test(u)) ?? null;
   return { apply, contact };
 }
@@ -407,11 +424,13 @@ async function saveInvestor(
   const inv = await extractInvestor(pages, startUrl);
   const fit = scoreInvestor(inv);
   const action = pickAction(formCandidates, contactCandidates, startUrl);
+  const email = findEmail(pages);
+  const contactUrl = action.contact && !action.contact.startsWith("mailto:") ? action.contact : null;
 
   db.prepare(
     `UPDATE programs SET
       title = ?, organization = ?, type = 'inversor', scope = ?, sector_focus = ?,
-      summary = ?, applies_url = ?, contact_url = ?, meta = ?, confidence = ?, fit_score = ?,
+      summary = ?, applies_url = ?, contact_url = ?, contact = ?, meta = ?, confidence = ?, fit_score = ?,
       eligibility_score = NULL, verdict = NULL, closing_at = NULL, updated_at = ?
      WHERE id = ?`
   ).run(
@@ -420,8 +439,9 @@ async function saveInvestor(
     inv.geographies.join(", ") || inv.country,
     inv.sector_focus.join(", "),
     inv.thesis,
-    action.apply ?? inv.url,
-    action.contact,
+    action.apply,
+    contactUrl,
+    email,
     JSON.stringify(inv),
     inv.confidence,
     fit,
