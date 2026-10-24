@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import path from "node:path";
 import { getDb, nowIso } from "@/lib/db";
 import { generateDraft } from "@/lib/draft";
 import { extractFormQuestions } from "@/lib/form-questions";
@@ -74,13 +75,22 @@ export async function POST(_req: Request, ctx: Ctx) {
     // Read the real form first, so the draft answers the questions that are
     // actually asked instead of a generic template.
     let formQuestions: string[] = [];
+    let source: "form" | "generic" | "login" = "generic";
     const formUrl = program.applies_url || program.contact_url;
     if (formUrl) {
-      formQuestions = await extractFormQuestions(formUrl).catch(() => []);
+      // Reuse the program's browser profile: if the user logged in there once,
+      // we can read a form that requires a session.
+      const profileDir = path.join(process.cwd(), "data", "browser-profile", `p${id}`);
+      const read = await extractFormQuestions(formUrl, profileDir).catch(() => null);
+      if (read?.status === "ok") {
+        formQuestions = read.questions;
+        source = "form";
+      } else if (read?.status === "login") {
+        source = "login";
+      }
     }
 
     const answers = await generateDraft(program, profile, docs, criteria, language, formQuestions);
-    const source = formQuestions.length ? "form" : "generic";
     const info = db
       .prepare("INSERT INTO application_drafts (program_id, content, source, created_at) VALUES (?, ?, ?, ?)")
       .run(Number(id), JSON.stringify(answers), source, nowIso());

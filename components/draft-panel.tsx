@@ -35,6 +35,8 @@ export function DraftPanel({
   const [prefilling, setPrefilling] = useState(false);
   const [prefillMsg, setPrefillMsg] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<string | null>(null);
+  const [loginBusy, setLoginBusy] = useState(false);
+  const [loginMsg, setLoginMsg] = useState<string | null>(null);
   const refs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
   const load = useCallback(async () => {
@@ -221,6 +223,44 @@ export function DraftPanel({
                 <div>
                   Guardada como documento de ejemplo: <strong>{submitted}</strong>. La próxima postulación va a
                   imitar su tono y estructura.
+                </div>
+              </div>
+            )}
+
+            {source === "login" && (
+              <div className="banner banner-warn" style={{ marginBottom: 14 }}>
+                <AlertTriangle size={15} style={{ flex: "none", marginTop: 2 }} />
+                <div>
+                  <strong>El formulario pide iniciar sesión.</strong> Sin tu sesión no puedo ver las preguntas, así
+                  que estas respuestas son genéricas.
+                  <div className="row wrap" style={{ gap: 8, marginTop: 8 }}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-primary"
+                      disabled={loginBusy}
+                      onClick={async () => {
+                        setLoginBusy(true);
+                        try {
+                          const res = await fetch(`/api/programs/${programId}/open-form`, { method: "POST" });
+                          const data = await res.json();
+                          if (!res.ok) throw new Error(data.error || "No se pudo abrir");
+                          setLoginMsg(
+                            "Se abrió una ventana. Iniciá sesión con Google, esperá a ver el formulario y CERRALA. Después tocá “Regenerar”."
+                          );
+                        } catch (e) {
+                          setLoginMsg((e as Error).message);
+                        } finally {
+                          setLoginBusy(false);
+                        }
+                      }}
+                    >
+                      <MonitorUp size={13} /> Abrir para iniciar sesión
+                    </button>
+                    <button type="button" className="btn btn-sm" onClick={generate} disabled={busy}>
+                      <RefreshCw size={13} /> Regenerar
+                    </button>
+                  </div>
+                  {loginMsg && <div className="small" style={{ marginTop: 8 }}>{loginMsg}</div>}
                 </div>
               </div>
             )}
