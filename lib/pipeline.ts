@@ -276,7 +276,7 @@ async function saveOpportunity(
   );
   const updateCriterion = db.prepare("UPDATE criteria SET verdict = ?, reason = ? WHERE id = ?");
   const finalVerdicts = stored.map((c, i) => {
-    const r = applyOverrides(c, llmResults?.[i] ?? matchHeuristic(c, profile));
+    const r = applyOverrides(c, llmResults?.[i] ?? matchHeuristic(c, profile), profile);
     updateCriterion.run(r.verdict, r.reason, c.id);
     return { verdict: r.verdict };
   });
@@ -503,7 +503,7 @@ export async function reevaluateProgram(id: number) {
   );
   const update = db.prepare("UPDATE criteria SET verdict = ?, reason = ? WHERE id = ?");
   const verdicts = stored.map((c, i) => {
-    const r = applyOverrides(c, llmResults?.[i] ?? matchHeuristic(c, profile));
+    const r = applyOverrides(c, llmResults?.[i] ?? matchHeuristic(c, profile), profile);
     update.run(r.verdict, r.reason, c.id);
     return { verdict: r.verdict };
   });
@@ -536,7 +536,7 @@ export async function reevaluateCriterion(criterionId: number, note: string) {
     profile,
     loadDocs()
   );
-  const r = applyOverrides(withNote, llmResults?.[0] ?? matchHeuristic(withNote, profile));
+  const r = applyOverrides(withNote, llmResults?.[0] ?? matchHeuristic(withNote, profile), profile);
   db.prepare("UPDATE criteria SET verdict = ?, reason = ? WHERE id = ?").run(r.verdict, r.reason, criterionId);
 
   const all = db.prepare("SELECT * FROM criteria WHERE program_id = ?").all(c.program_id) as Criterion[];

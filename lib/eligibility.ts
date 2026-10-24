@@ -51,13 +51,51 @@ export function nonRequirementReason(text: string): string | null {
   return re.test(text) ? "No es un requisito: la base aclara que no se exige." : null;
 }
 
+const EXCLUSION = /no\s+(podr[aá]n|pueden|se\s+aceptan|se\s+admiten|participan)/i;
+
+/**
+ * A country restriction is a hard requirement, not a "doesn't apply".
+ * If the criterion names countries and none is the startup's, it's a no.
+ */
+export function geoOverride(
+  c: { text: string; category?: string | null; quote?: string | null },
+  p: Profile
+): { verdict: CriterionVerdict; reason: string } | null {
+  if (!p.country) return null;
+  const raw = `${c.text} ${c.quote ?? ""}`;
+  const text = raw.toLowerCase();
+  if (EXCLUSION.test(text)) return null;
+
+  const named = COUNTRIES.filter((cn) => text.includes(cn));
+  if (!named.length) return null;
+
+  const own = p.country.toLowerCase().trim();
+  const included = named.some((cn) => own.includes(cn) || cn.includes(own));
+  if (included) return null;
+
+  // Only when the wording is about who may apply.
+  const eligibilityish = /(podr[aá]n|pueden|postular|aplica|dirigid|exclusiv|solo|abierto|abierta|empresas|startups|proyectos|particip)/i.test(text);
+  if (!eligibilityish) return null;
+
+  return {
+    verdict: "no_cumple",
+    reason: `La convocatoria apunta a ${named
+      .map((c) => c.charAt(0).toUpperCase() + c.slice(1))
+      .join(", ")} y Mehmiro opera en ${p.country}.`,
+  };
+}
+
 /** Deterministic guard applied after the LLM, so a model mistake can't create a false negative. */
 export function applyOverrides(
-  c: { text: string; user_note?: string | null },
-  r: { verdict: CriterionVerdict; reason: string }
+  c: { text: string; user_note?: string | null; quote?: string | null; category?: string | null },
+  r: { verdict: CriterionVerdict; reason: string },
+  p?: Profile
 ): { verdict: CriterionVerdict; reason: string } {
   const nonReq = nonRequirementReason(c.text);
   if (nonReq) return { verdict: "no_aplica", reason: nonReq };
+
+  const geo = p ? geoOverride(c, p) : null;
+  if (geo) return geo;
 
   // Without an LLM the heuristic can't interpret a free-text note: be explicit
   // instead of silently ignoring what the user wrote.
@@ -76,6 +114,9 @@ export function matchHeuristic(c: Criterion, p: Profile): { verdict: CriterionVe
 
   const nonReq = nonRequirementReason(c.text);
   if (nonReq) return { verdict: "no_aplica", reason: nonReq };
+
+  const geo = geoOverride(c, c as never);
+  if (geo) return geo;
 
   // A requirement scoped to a specific track/category must not disqualify globally.
   const trackScoped =
@@ -240,7 +281,8 @@ Para cada criterio devolvés un veredicto:
 - "no_cumple": el perfil contradice el requisito.
 - "falta_dato": el perfil no tiene la información necesaria.
 - "ambiguo": el requisito o el perfil son ambiguos.
-- "no_aplica": el requisito pertenece a un track, categoría o país específico que la startup NO necesita (puede presentarse por otro). No lo uses para requisitos globales.
+- "no_aplica": SOLO para requisitos que pertenecen a un track o categoría alternativa (la startup puede presentarse por otro track). NUNCA lo uses para una restricción geográfica: si el programa es solo para Brasil y la startup es de Argentina, es "no_cumple".
+- Los requisitos geográficos son excluyentes: si el criterio dice "startups de Brasil" y el perfil dice Argentina, el veredicto es "no_cumple" con el motivo."
 Nunca inventes datos del perfil. Si el perfil está vacío en un campo, es "falta_dato".
 Usá los DOCUMENTOS DE CONTEXTO como fuente de verdad sobre tracción, equipo, producto y métricas de la startup; si un documento responde un criterio, no es "falta_dato".
 Si un criterio trae "NOTA DEL USUARIO", es información que el fundador aportó explícitamente: tratala como dato veraz y resolvé el veredicto con eso.
