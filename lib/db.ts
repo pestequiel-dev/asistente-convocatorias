@@ -90,7 +90,8 @@ CREATE TABLE IF NOT EXISTS programs (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   analyzed_at TEXT,
-  started_at TEXT
+  started_at TEXT,
+  applied_at TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_programs_status ON programs(status);
@@ -244,6 +245,7 @@ function migrate(db: Database.Database) {
     ["relevance_score", "INTEGER"],
     ["fit_score", "INTEGER"],
     ["started_at", "TEXT"],
+    ["applied_at", "TEXT"],
     ["contact_url", "TEXT"],
     ["meta", "TEXT"],
     ["diff_summary", "TEXT"],

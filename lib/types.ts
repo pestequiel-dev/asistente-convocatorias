@@ -112,6 +112,7 @@ export interface Program {
   meta: string | null;
   diff_summary: string | null;
   diff_at: string | null;
+  applied_at: string | null;
   notes: string | null;
   priority: number;
   created_at: string;

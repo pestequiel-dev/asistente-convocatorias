@@ -45,6 +45,17 @@ export const PIPELINE: Record<string, { label: string; tone: string }> = {
   lost: { label: "Perdida", tone: "gray" },
 };
 
+export const PIPELINE_INVESTOR: Record<string, { label: string; tone: string }> = {
+  idea: { label: "Guardado", tone: "gray" },
+  reviewing: { label: "En revisión", tone: "blue" },
+  eligible: { label: "Encaja", tone: "green" },
+  not_eligible: { label: "No encaja", tone: "red" },
+  applying: { label: "Preparando pitch", tone: "amber" },
+  applied: { label: "Pitch enviado", tone: "teal" },
+  won: { label: "Invirtió", tone: "green" },
+  lost: { label: "Rechazó", tone: "gray" },
+};
+
 export const VERDICT: Record<string, { label: string; tone: string }> = {
   eligible: { label: "Elegible", tone: "green" },
   not_eligible: { label: "No elegible", tone: "red" },

@@ -15,11 +15,13 @@ export function DraftPanel({
   programId,
   appliesUrl,
   contactUrl,
+  appliedAt,
   onChanged,
 }: {
   programId: number;
   appliesUrl: string | null;
   contactUrl: string | null;
+  appliedAt?: string | null;
   onChanged?: () => void | Promise<void>;
 }) {
   const [answers, setAnswers] = useState<Answer[] | null>(null);
@@ -203,6 +205,16 @@ export function DraftPanel({
 
         {answers && (
           <>
+            {appliedAt && !submitted && (
+              <div className="banner banner-ok" style={{ marginBottom: 14 }}>
+                <Check size={15} style={{ flex: "none", marginTop: 2 }} />
+                <div>
+                  Esta postulación figura como <strong>enviada el {new Date(appliedAt).toLocaleDateString("es-AR")}</strong>.
+                  Si volvés a enviarla, regenerá el borrador para no guardar dos veces el mismo ejemplo.
+                </div>
+              </div>
+            )}
+
             {submitted && (
               <div className="banner banner-ok" style={{ marginBottom: 14 }}>
                 <Check size={15} style={{ flex: "none", marginTop: 2 }} />
@@ -307,7 +319,7 @@ export function DraftPanel({
                 anterior”) y el programa pasa a “Aplicada”.
               </span>
               <button className="btn btn-primary" onClick={markSubmitted} disabled={busy || !!submitted}>
-                <Send size={15} /> Ya la envié
+                <Send size={15} /> {appliedAt ? "Volver a marcar como enviada" : "Ya la envié"}
               </button>
             </div>
 

@@ -8,7 +8,7 @@ import {
   Trash2, TriangleAlert, X, HelpCircle, Minus, Database, Sparkles,
 } from "lucide-react";
 import type { Criterion, KeyDate, Program } from "@/lib/types";
-import { CRITERION, PIPELINE, VERDICT, countdown, fmtDate, fmtDateTime, scoreColor, toneClass } from "./format";
+import { CRITERION, PIPELINE, PIPELINE_INVESTOR, VERDICT, countdown, fmtDate, fmtDateTime, scoreColor, toneClass } from "./format";
 import { KIND_META, EventBody, CompetitorBody, InvestorBody, ReferenceBody } from "./kind-body";
 import { buildRecommendation } from "@/lib/recommend";
 import { RecommendationCard } from "./recommendation";
@@ -199,6 +199,13 @@ export function ProgramDetail({ id }: { id: number }) {
               <span className={`badge ${p.relevance_score >= 60 ? "badge-green" : p.relevance_score >= 35 ? "badge-amber" : "badge-gray"}`}>
                 Relevancia {p.relevance_score}%
               </span>
+            )}
+            {(isOpp || isInv) && (p.applies_url || p.contact_url) && (
+              p.applied_at ? (
+                <span className="badge badge-green">Postulación enviada · {fmtDate(p.applied_at)}</span>
+              ) : (
+                <span className="badge badge-amber">Postulación sin enviar</span>
+              )
             )}
             {!p.kind_confirmed && <span className="badge badge-amber">sin confirmar</span>}
             {p.kind_confidence != null && (
@@ -396,6 +403,7 @@ export function ProgramDetail({ id }: { id: number }) {
               programId={p.id}
               appliesUrl={p.applies_url}
               contactUrl={p.contact_url}
+              appliedAt={p.applied_at}
               onChanged={load}
             />
           )}
@@ -639,7 +647,7 @@ export function ProgramDetail({ id }: { id: number }) {
 
           <section className="card card-pad">
             <div className="kpi-label" style={{ marginBottom: 8 }}>Gestión</div>
-            {isOpp ? (
+            {isOpp || isInv ? (
               <div className="field" style={{ marginBottom: 12 }}>
                 <label className="label">Estado</label>
                 <select
@@ -647,7 +655,7 @@ export function ProgramDetail({ id }: { id: number }) {
                   value={p.pipeline_status}
                   onChange={(e) => patch({ pipeline_status: e.target.value })}
                 >
-                  {Object.entries(PIPELINE).map(([k, v]) => (
+                  {Object.entries(isInv ? PIPELINE_INVESTOR : PIPELINE).map(([k, v]) => (
                     <option key={k} value={k}>{v.label}</option>
                   ))}
                 </select>

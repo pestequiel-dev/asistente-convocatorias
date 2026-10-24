@@ -43,9 +43,12 @@ export async function POST(_req: Request, ctx: Ctx) {
     .prepare("INSERT INTO profile_docs (label, url, kind, content, created_at) VALUES (?, ?, ?, ?, ?)")
     .run(label, program.applies_url || program.contact_url || "", "Aplicación anterior", body, nowIso());
 
-  if (program.kind === "convocatoria") {
-    db.prepare("UPDATE programs SET pipeline_status = 'applied', updated_at = ? WHERE id = ?").run(nowIso(), Number(id));
-  }
+  // Any kind with a real form (convocatoria, inversor) can be "sent".
+  db.prepare("UPDATE programs SET pipeline_status = 'applied', applied_at = ?, updated_at = ? WHERE id = ?").run(
+    nowIso(),
+    nowIso(),
+    Number(id)
+  );
 
   return NextResponse.json({
     ok: true,
