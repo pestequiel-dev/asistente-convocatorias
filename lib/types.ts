@@ -181,6 +181,9 @@ export interface Profile {
   founder_name: string;
   founder_last: string;
   email: string;
+  linkedin: string;
+  phone: string;
+  role: string;
   legal_status: string;
   legal_structure_detail: string;
   can_invoice: string;

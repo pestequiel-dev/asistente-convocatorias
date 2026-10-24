@@ -38,6 +38,7 @@ export function DraftPanel({
   const [loginBusy, setLoginBusy] = useState(false);
   const [loginMsg, setLoginMsg] = useState<string | null>(null);
   const [showPaste, setShowPaste] = useState(false);
+  const [missingProfile, setMissingProfile] = useState<string[]>([]);
   const [pasteText, setPasteText] = useState("");
   const refs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
@@ -53,6 +54,20 @@ export function DraftPanel({
 
   useEffect(() => {
     load();
+    fetch("/api/profile")
+      .then((r) => r.json())
+      .then((d) => {
+        const p = d.profile ?? {};
+        const missing: string[] = [];
+        if (!p.founder_name) missing.push("nombre");
+        if (!p.founder_last) missing.push("apellido");
+        if (!p.email) missing.push("email");
+        if (!p.linkedin) missing.push("LinkedIn");
+        if (!p.phone) missing.push("teléfono");
+        if (!p.role) missing.push("rol");
+        setMissingProfile(missing);
+      })
+      .catch(() => {});
   }, [load]);
 
   async function generate() {
@@ -401,6 +416,19 @@ export function DraftPanel({
                 );
               })}
             </div>
+
+            {missingProfile.length > 0 && (
+              <div className="banner banner-info" style={{ marginTop: 14 }}>
+                <AlertTriangle size={15} style={{ flex: "none", marginTop: 2 }} />
+                <div>
+                  El prefill no puede completar <strong>{missingProfile.join(", ")}</strong> porque no están en tu
+                  perfil.{" "}
+                  <a href="/perfil" style={{ color: "inherit", fontWeight: 500, textDecoration: "underline" }}>
+                    Completar perfil
+                  </a>
+                </div>
+              </div>
+            )}
 
             <div className="row-between wrap" style={{ marginTop: 16, gap: 10 }}>
               <span className="tiny muted" style={{ maxWidth: 460 }}>

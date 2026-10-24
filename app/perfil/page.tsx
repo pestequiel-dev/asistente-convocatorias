@@ -8,7 +8,7 @@ import type { Profile } from "@/lib/types";
 type Form = Omit<Profile, "id" | "updated_at">;
 
 const EMPTY: Form = {
-  name: "", url: "", country: "", city: "", founder_name: "", founder_last: "", email: "", legal_status: "", legal_structure_detail: "", can_invoice: "", founded: "", stage: "", sector: "",
+  name: "", url: "", country: "", city: "", founder_name: "", founder_last: "", email: "", linkedin: "", phone: "", role: "", legal_status: "", legal_structure_detail: "", can_invoice: "", founded: "", stage: "", sector: "",
   description: "", team_size: null, founders: null, revenue_usd: null, customers: null,
   languages: "", tech_stack: "", has_product: "", notes: "",
 };
@@ -199,8 +199,20 @@ export default function PerfilPage() {
               <input className="input" value={form.founder_last} onChange={(e) => set("founder_last", e.target.value)} />
             </div>
             <div className="field">
+              <label className="label">Rol / cargo</label>
+              <input className="input" placeholder="Co-founder & CEO" value={form.role} onChange={(e) => set("role", e.target.value)} />
+            </div>
+            <div className="field">
               <label className="label">Email de contacto</label>
               <input className="input" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="label">LinkedIn</label>
+              <input className="input" placeholder="https://linkedin.com/in/…" value={form.linkedin} onChange={(e) => set("linkedin", e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="label">Teléfono</label>
+              <input className="input" placeholder="+54 9 11 …" value={form.phone} onChange={(e) => set("phone", e.target.value)} />
             </div>
             <div className="field">
               <label className="label">Ciudad</label>

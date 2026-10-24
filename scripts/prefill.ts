@@ -44,6 +44,11 @@ const facts: FillValue[] = [
   { label: "pais", aliases: ["country", "nation"], value: profile.country || "" },
   { label: "empresa", aliases: ["company", "startup", "organization", "organisation"], value: profile.name || "" },
   { label: "sitio web", aliases: ["website", "web", "url", "site"], value: profile.url || "" },
+  { label: "linkedin", aliases: ["linkedin", "social", "profile"], value: profile.linkedin || "" },
+  { label: "telefono", aliases: ["phone", "mobile", "whatsapp", "teléfono"], value: profile.phone || "" },
+  { label: "rol", aliases: ["role", "title", "position", "cargo", "puesto"], value: profile.role || "" },
+  { label: "industria", aliases: ["industry", "sector", "vertical"], value: profile.sector || "" },
+  { label: "tecnologia", aliases: ["technology", "tech", "stack"], value: profile.tech_stack || "" },
 ].filter((f) => f.value);
 
 const values: FillValue[] = [

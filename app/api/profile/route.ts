@@ -14,7 +14,7 @@ export async function PUT(req: Request) {
   const db = getDb();
 
   const fields = [
-    "name", "url", "country", "city", "founder_name", "founder_last", "email", "legal_status", "legal_structure_detail", "can_invoice", "founded", "stage", "sector", "description",
+    "name", "url", "country", "city", "founder_name", "founder_last", "email", "linkedin", "phone", "role", "legal_status", "legal_structure_detail", "can_invoice", "founded", "stage", "sector", "description",
     "team_size", "founders", "revenue_usd", "customers", "languages", "tech_stack", "has_product", "notes",
   ] as const;
 
@@ -32,7 +32,7 @@ export async function PUT(req: Request) {
   values.push(nowIso());
 
   // Empty strings for NOT NULL columns are normalised to "" instead of NULL.
-  const textCols = new Set(["name", "url", "country", "city", "founder_name", "founder_last", "email", "founder_name", "founder_last", "email", "legal_status", "legal_structure_detail", "can_invoice", "founded", "stage", "sector", "description", "languages", "tech_stack", "has_product", "notes"]);
+  const textCols = new Set(["name", "url", "country", "city", "founder_name", "founder_last", "email", "linkedin", "phone", "role", "linkedin", "phone", "role", "founder_name", "founder_last", "email", "linkedin", "phone", "role", "legal_status", "legal_structure_detail", "can_invoice", "founded", "stage", "sector", "description", "languages", "tech_stack", "has_product", "notes"]);
 
   const stmt = db.prepare(
     `UPDATE profile SET ${sets.map((s) => {
