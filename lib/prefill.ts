@@ -61,6 +61,16 @@ async function labelCandidates(page: Page, handle: ElementHandle<Element>): Prom
 
     push(node.closest("label")?.textContent);
 
+    // Airtable: the label lives in the field box, not next to the editor.
+    const box = node.closest(".sharedFormField");
+    if (box) {
+      const label = box.querySelector("label.title, label");
+      if (label?.textContent) push(label.textContent);
+      // Rich-text fields have no <label>: the title is the first child.
+      const first = box.firstElementChild?.textContent?.trim();
+      if (first) push(first);
+    }
+
     // Google Forms: the question is the heading of the list item.
     const item = node.closest('[role="listitem"]');
     if (item) {
@@ -99,7 +109,7 @@ export async function fillForm(
   // is serialised into the browser that helper doesn't exist. Harmless shim.
   await page.evaluate("window.__name = window.__name || function (f) { return f };");
   const handles = await page.$$(
-    'input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), textarea, select'
+    'input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), textarea, select, [role="textbox"]:not(.ql-clipboard), div[contenteditable="true"]:not(.ql-clipboard)'
   );
 
   let filled = 0;

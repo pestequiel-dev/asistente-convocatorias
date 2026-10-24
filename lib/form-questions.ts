@@ -59,14 +59,19 @@ async function readPage(page: import("playwright").Page, depth = 0): Promise<For
 
   const questions = await safeEval(page, () => {
     const out: string[] = [];
-    const fields = document.querySelectorAll(
-      'input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]), textarea'
-    );
+    const fields = new Set<Element>([
+      ...document.querySelectorAll(
+        'input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]), textarea'
+      ),
+      ...document.querySelectorAll('[role="textbox"], div[contenteditable="true"], div[contenteditable="plaintext-only"]'),
+    ]);
 
     for (const el of Array.from(fields)) {
+      if ((el.className || "").toString().includes("ql-clipboard")) continue;
       const node = el as HTMLElement;
       const tag = node.tagName.toLowerCase();
       const type = (node.getAttribute("type") || "").toLowerCase();
+      const isLongText = tag === "textarea" || node.getAttribute("role") === "textbox";
       if (["file", "url", "tel", "number", "checkbox", "radio", "submit"].includes(type)) continue;
 
       const candidates: string[] = [];
@@ -96,11 +101,20 @@ async function readPage(page: import("playwright").Page, depth = 0): Promise<For
         if (heading?.textContent) push(heading.textContent);
       }
 
+      // Airtable: the field label is a <label> inside the field box.
+      const box = node.closest(".sharedFormField");
+      if (box) {
+        const label = box.querySelector("label.title, label");
+        if (label?.textContent) push(label.textContent);
+      }
+
       let parent: HTMLElement | null = node.parentElement;
-      for (let i = 0; i < 4 && parent; i++) {
+      for (let i = 0; i < 6 && parent; i++) {
         const text = (parent.innerText || "").trim();
-        if (text && text.length < 220) {
-          push(text);
+        if (text) {
+          // Keep the first line: it is the question, not the help text.
+          const first = text.split("\n")[0].trim();
+          if (first.length >= 4 && first.length < 140) push(first);
           break;
         }
         parent = parent.parentElement;
@@ -108,7 +122,7 @@ async function readPage(page: import("playwright").Page, depth = 0): Promise<For
 
       const best = candidates.sort((a, b) => b.length - a.length)[0];
       if (!best || best.length < 8) continue;
-      if (tag !== "textarea" && /(url|link|video|adjunt|archiv|file|portfolio|github|linkedin)/i.test(best)) continue;
+      if (!isLongText && /(url|link|video|adjunt|archiv|file|portfolio|github|linkedin)/i.test(best)) continue;
 
       if (!out.includes(best)) out.push(best);
     }
@@ -200,7 +214,13 @@ export async function extractFormQuestions(url: string, programId?: number): Pro
     const dir = profileDir ?? (await fs.promises.mkdtemp("/tmp/mehmiro-"));
     context = await chromium.launchPersistentContext(dir, { headless: true, executablePath });
   } catch {
-    return { status: "error", message: "No se pudo abrir el navegador para leer el formulario" };
+    // A locked profile (another window open) must not block the read.
+    try {
+      const dir = await fs.promises.mkdtemp("/tmp/mehmiro-");
+      context = await chromium.launchPersistentContext(dir, { headless: true, executablePath });
+    } catch (e) {
+      return { status: "error", message: (e as Error).message.slice(0, 140) };
+    }
   }
 
   try {
