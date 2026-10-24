@@ -120,9 +120,14 @@ export async function fillForm(
       for (const cand of candidates) {
         const lt = tokens(cand);
         if (!lt.length) continue;
+        const candNorm = cand.toLowerCase();
         for (const v of values) {
           for (const key of [v.label, ...(v.aliases ?? [])]) {
-            const s = score(lt, key);
+            let s = score(lt, key);
+            // "Linkedin URL" must beat "website" (whose alias "url" also fits).
+            const keyNorm = key.toLowerCase().trim();
+            // Longer keys are more specific: "linkedin" beats the generic "url".
+            if (keyNorm.length > 2 && candNorm.includes(keyNorm)) s += 0.03 * keyNorm.length;
             if (!best || s > best.s) best = { value: v, s };
           }
         }

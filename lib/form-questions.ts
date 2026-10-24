@@ -41,17 +41,19 @@ async function readPage(page: import("playwright").Page, depth = 0): Promise<For
 
   const probe = await safeEval(page, () => ({
     email: document.querySelectorAll('input[type="email"]').length,
-    items: document.querySelectorAll('[role="listitem"]').length,
+    password: document.querySelectorAll('input[type="password"]').length,
     text: document.body.innerText.slice(0, 400),
   }));
 
+  // A password field is the real signal: a form with an email input is not a
+  // login page (Airtable forms have one and were being misdetected).
   const looksLikeLogin =
-    /\/(auth|signin|sign-in|login|session)/i.test(page.url()) ||
     host.includes("accounts.google.com") ||
+    /\/(auth|signin|sign-in|login|session)\b/i.test(page.url()) ||
     /(sign in|iniciar sesión|inicia sesión|acceder|request access|solicitar acceso|pedir acceso|necesitás permiso|you need permission)/i.test(
       `${title} ${probe.text}`
     ) ||
-    (probe.email > 0 && probe.items === 0);
+    probe.password > 0;
 
   if (looksLikeLogin) return { status: "login" };
 
@@ -105,12 +107,8 @@ async function readPage(page: import("playwright").Page, depth = 0): Promise<For
       }
 
       const best = candidates.sort((a, b) => b.length - a.length)[0];
-      const minLen = tag === "textarea" ? 5 : 13;
-      if (!best || best.length < minLen) continue;
+      if (!best || best.length < 8) continue;
       if (tag !== "textarea" && /(url|link|video|adjunt|archiv|file|portfolio|github|linkedin)/i.test(best)) continue;
-
-      const looksLikeQuestion = tag === "textarea" || best.includes("?") || best.length > 45;
-      if (!looksLikeQuestion) continue;
 
       if (!out.includes(best)) out.push(best);
     }
