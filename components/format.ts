@@ -43,6 +43,7 @@ export const PIPELINE: Record<string, { label: string; tone: string }> = {
   applied: { label: "Aplicada", tone: "teal" },
   won: { label: "Ganada", tone: "green" },
   lost: { label: "Perdida", tone: "gray" },
+  closed: { label: "Cerrada · no acepta postulaciones", tone: "gray" },
 };
 
 export const PIPELINE_INVESTOR: Record<string, { label: string; tone: string }> = {
@@ -54,6 +55,7 @@ export const PIPELINE_INVESTOR: Record<string, { label: string; tone: string }> 
   applied: { label: "Pitch enviado", tone: "teal" },
   won: { label: "Invirtió", tone: "green" },
   lost: { label: "Rechazó", tone: "gray" },
+  closed: { label: "Cerrado · no recibe pitches", tone: "gray" },
 };
 
 export const VERDICT: Record<string, { label: string; tone: string }> = {

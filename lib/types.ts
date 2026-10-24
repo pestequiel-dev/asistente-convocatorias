@@ -15,7 +15,8 @@ export type PipelineStatus =
   | "applying"
   | "applied"
   | "won"
-  | "lost";
+  | "lost"
+  | "closed";
 
 export type CriterionVerdict =
   | "cumple"

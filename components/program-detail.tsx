@@ -201,6 +201,10 @@ export function ProgramDetail({ id }: { id: number }) {
                 Relevancia {p.relevance_score}%
               </span>
             )}
+            {p.pipeline_status === "closed" && (
+              <span className="badge badge-gray">{isInv ? "Cerrado" : "Cerrada"}</span>
+            )}
+
             {(isOpp || isInv) && (p.applies_url || p.contact_url) && (
               p.applied_at ? (
                 <span className="badge badge-green">Postulación enviada · {fmtDate(p.applied_at)}</span>
