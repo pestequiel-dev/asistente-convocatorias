@@ -188,8 +188,10 @@ export function ProgramDetail({ id }: { id: number }) {
               </span>
             )}
             {isOpp && p.eligibility_score != null && (
-              <span className={toneClass(verdict.tone)}>
-                {verdict.label} · {p.eligibility_score}%
+              <span className={toneClass(p.criteria_source === "form" ? "amber" : verdict.tone)}>
+                {p.criteria_source === "form"
+                  ? "Elegibilidad sin verificar"
+                  : `${verdict.label} · ${p.eligibility_score}%`}
               </span>
             )}
             {isInv && (

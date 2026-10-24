@@ -491,7 +491,7 @@ export async function extract(
  */
 export async function criteriaFromForm(
   questions: string[],
-  ctx: { title: string | null; organization: string | null; summary: string | null }
+  ctx: { title: string | null; organization: string | null; summary: string | null; formText?: string }
 ): Promise<{ text: string; category: string; url: string; quote: string; confidence: number }[]> {
   if (!questions.length) return [];
   const { json } = await chatJson<{
@@ -502,13 +502,17 @@ Devolvés JSON {"criteria":[{"text":"...","category":"...","quote":"la pregunta 
 Reglas:
 - Solo requisitos que se puedan verificar contra el perfil de una startup (país, etapa, tracción, sector, equipo, idioma, legal).
 - Si la pregunta NO implica un requisito (ej. "¿cómo nos conociste?"), no la conviertas.
+- Si las opciones de un desplegable listan países o regiones, eso ES un requisito geográfico: escribilo (ej. "La empresa debe estar radicada en UE, Reino Unido o Corea").
 - Máximo 6. Texto en tercera persona, corto.
 - Categorías válidas: producto, traccion, equipo, legal, geografia, idioma, etapa, otro.`,
     `Programa: ${ctx.title ?? ""} (${ctx.organization ?? ""})
 Resumen: (${ctx.summary ?? ""}).slice(0, 400)}
 
 Preguntas del formulario:
-${questions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`,
+${questions.map((q, i) => `${i + 1}. ${q}`).join("\n")}
+
+Texto visible del formulario (incluye las opciones de los desplegables):
+${(ctx.formText ?? "").slice(0, 1200)}`,
     { maxTokens: 1500, temperature: 0.2 }
   );
 

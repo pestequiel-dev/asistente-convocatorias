@@ -7,7 +7,7 @@ const SKIP = /^(first name|last name|full name|name|e-?mails?|age|phone|mobile|c
 const DATA = /(ventas|revenue|monto|amount|tama[ñn]o (de )?ronda|round size|valorizaci|valuation|fecha|date|capital|cantidad de|number of|whatsapp|tel[eé]fono|pa[ií]s( origen)?|origen startup|sitio web|website|nombre de tu startup|founders?|mail|e-?mail)/i;
 
 export type FormReadResult =
-  | { status: "ok"; questions: string[] }
+  | { status: "ok"; questions: string[]; pageText?: string }
   | { status: "login" }
   | { status: "empty" }
   | { status: "error"; message: string };
@@ -160,7 +160,10 @@ async function readPage(page: import("playwright").Page, depth = 0): Promise<For
     }
   }
 
-  return clean.length ? { status: "ok", questions: clean } : { status: "empty" };
+  if (!clean.length) return { status: "empty" };
+  const pageText = await safeEval(page, () => document.body.innerText.slice(0, 1800).replace(/\n{2,}/g, "\n"))
+    .catch(() => "");
+  return { status: "ok", questions: clean, pageText };
 }
 
 export async function extractFormQuestions(url: string, programId?: number): Promise<FormReadResult> {

@@ -116,7 +116,17 @@ export async function analyzeProgram(
       return;
     }
 
-    const isOpportunity = cls.kind === "convocatoria";
+    // An accelerator with an application flow is a convocatoria for us: that's
+    // where eligibility matters, even when the site also runs a fund.
+    let kind = cls.kind;
+    if (kind === "inversor" && /(accelerator|aceleradora|bootcamp|cohort|batch|founder fit)/i.test(`${preview.title ?? ""} ${start}`)) {
+      if (/(apply|postul|aplica|fit check)/i.test(preview.text ?? "")) {
+        kind = "convocatoria";
+        log(id, "aceleradora con flujo de aplicación: tratada como convocatoria");
+      }
+    }
+
+    const isOpportunity = kind === "convocatoria";
 
     const insertSource = db.prepare(
       `INSERT INTO sources (program_id, url, title, kind, depth, status, hash, text, fetched_at)
@@ -129,7 +139,7 @@ export async function analyzeProgram(
 
     let seen = 0;
     let crawled = await crawlSite(start, {
-      maxPages: opts.maxPages ?? maxPagesFor(cls.kind),
+      maxPages: opts.maxPages ?? maxPagesFor(kind),
       maxDepth: isOpportunity ? 2 : 1,
       onLog: (m) => log(id, m),
       onPage: (page: CrawledPage) => {
@@ -155,7 +165,7 @@ export async function analyzeProgram(
         if (alt) {
           log(id, `dominio caído; se reintenta desde ${alt.url}`);
           const retry = await crawlSite(alt.url, {
-            maxPages: opts.maxPages ?? maxPagesFor(cls.kind),
+            maxPages: opts.maxPages ?? maxPagesFor(kind),
             maxDepth: isOpportunity ? 2 : 1,
             onLog: (m) => console.log(`[programa ${id}] ${m}`),
             onPage: (page: CrawledPage) => {
@@ -202,13 +212,20 @@ export async function analyzeProgram(
       );
     }
 
-    if (isOpportunity) {
+    // The classifier may see a fund; if the site also has an application form
+    // for an accelerator, eligibility is what the founder needs.
+    if (kind === "inversor" && crawled.formCandidates.length && /(accelerator|aceleradora|bootcamp)/i.test(`${start} ${preview.title ?? ""}`)) {
+      kind = "convocatoria";
+      log(id, "aceleradora con formulario: tratada como convocatoria");
+    }
+
+    if (kind === "convocatoria") {
       await saveOpportunity(id, profile, crawled.pages, crawled.formCandidates, crawled.contactCandidates, crawled.startUrl);
-    } else if (cls.kind === "evento") {
+    } else if (kind === "evento") {
       await saveEvent(id, profile, crawled.pages, crawled.startUrl, crawled.formCandidates, crawled.contactCandidates);
-    } else if (cls.kind === "competidor") {
+    } else if (kind === "competidor") {
       await saveCompetitor(id, crawled.pages, crawled.startUrl, previousSnapshot);
-    } else if (cls.kind === "inversor") {
+    } else if (kind === "inversor") {
       await saveInvestor(id, crawled.pages, crawled.startUrl, crawled.formCandidates, crawled.contactCandidates);
     } else {
       saveReference(id, crawled.pages, crawled.startUrl, preview, cls.reason);
@@ -271,6 +288,7 @@ async function saveOpportunity(
           title: extraction.title,
           organization: extraction.organization,
           summary: extraction.summary,
+          formText: read.pageText,
         }).catch(() => []);
         if (derived.length) {
           extraction.criteria = derived;
