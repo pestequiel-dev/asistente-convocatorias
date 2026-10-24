@@ -29,7 +29,10 @@ function isAnalyzing(p: Program) {
 }
 
 function fitOf(p: Program): number | null {
-  return p.fit_score ?? p.eligibility_score ?? p.relevance_score ?? null;
+  // Read the semantic score for the kind, not the cached mirror.
+  if (p.kind === "convocatoria") return p.eligibility_score ?? p.fit_score ?? null;
+  if (p.kind === "evento") return p.relevance_score ?? p.fit_score ?? null;
+  return p.fit_score ?? null;
 }
 
 function KindChip({ kind }: { kind: Kind }) {

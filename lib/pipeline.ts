@@ -508,9 +508,10 @@ export async function reevaluateProgram(id: number) {
     return { verdict: r.verdict };
   });
   const { score, verdict } = computeScore(verdicts);
-  db.prepare("UPDATE programs SET eligibility_score = ?, verdict = ?, updated_at = ? WHERE id = ?").run(
+  db.prepare("UPDATE programs SET eligibility_score = ?, verdict = ?, fit_score = ?, updated_at = ? WHERE id = ?").run(
     score,
     verdict,
+    score,
     nowIso(),
     id
   );
@@ -541,9 +542,10 @@ export async function reevaluateCriterion(criterionId: number, note: string) {
 
   const all = db.prepare("SELECT * FROM criteria WHERE program_id = ?").all(c.program_id) as Criterion[];
   const { score, verdict } = computeScore(all);
-  db.prepare("UPDATE programs SET eligibility_score = ?, verdict = ?, updated_at = ? WHERE id = ?").run(
+  db.prepare("UPDATE programs SET eligibility_score = ?, verdict = ?, fit_score = ?, updated_at = ? WHERE id = ?").run(
     score,
     verdict,
+    score,
     nowIso(),
     c.program_id
   );

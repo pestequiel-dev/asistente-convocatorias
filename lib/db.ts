@@ -224,6 +224,7 @@ export function getDb(): Database.Database {
   seedProfile(db);
   applyLegalDefaults(db);
   cleanReferenceSummaries(db);
+  syncFitScores(db);
   globalThis.__db = db;
   return db;
 }
@@ -272,6 +273,16 @@ function migrate(db: Database.Database) {
 }
 
 /** Mehmiro operates under a cooperative's legal/tax umbrella; prefill it once. */
+/** fit_score mirrors the kind-specific score; keep it from going stale. */
+function syncFitScores(db: Database.Database) {
+  db.prepare(
+    "UPDATE programs SET fit_score = eligibility_score WHERE kind = 'convocatoria' AND eligibility_score IS NOT NULL AND (fit_score IS NULL OR fit_score != eligibility_score)"
+  ).run();
+  db.prepare(
+    "UPDATE programs SET fit_score = relevance_score WHERE kind = 'evento' AND relevance_score IS NOT NULL AND (fit_score IS NULL OR fit_score != relevance_score)"
+  ).run();
+}
+
 /** References used to store the raw page text (nav menus). Clean those up once. */
 function cleanReferenceSummaries(db: Database.Database) {
   db.prepare(
