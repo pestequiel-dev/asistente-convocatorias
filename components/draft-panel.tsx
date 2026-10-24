@@ -203,12 +203,12 @@ export function DraftPanel({
               </button>
             </>
           )}
-          {(appliesUrl || contactUrl) && (
-            <a className="btn btn-sm" href={(appliesUrl || contactUrl) as string} target="_blank" rel="noreferrer">
+          {appliesUrl && (
+            <a className="btn btn-sm" href={appliesUrl} target="_blank" rel="noreferrer">
               Abrir formulario <ExternalLink size={13} />
             </a>
           )}
-          {answers && (appliesUrl || contactUrl) && (
+          {answers && appliesUrl && (
             <button
               className="btn btn-sm btn-primary"
               disabled={prefilling}

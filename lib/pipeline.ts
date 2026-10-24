@@ -353,9 +353,11 @@ function findEmail(pages: CrawledPage[]): string | null {
 function pickAction(formCandidates: string[], contactCandidates: string[], startUrl: string) {
   const usable = formCandidates.filter((u) => !JUNK_URL.test(u));
   // A "form" must look like one; /insights is a blog, not an application.
+  const isContactPage = (u: string) => /(contact|contacto|contact-us|contáctanos|get-in-touch|hablemos)/i.test(u);
   const looksLikeForm = (u: string) =>
-    /airtable|typeform|forms\.|jotform|tally|google\.com\/forms/i.test(u) ||
-    /(apply|postul|aplica|formulario|contact|inscri)/i.test(u);
+    !isContactPage(u) &&
+    (/airtable|typeform|forms\.|jotform|tally|google\.com\/forms/i.test(u) ||
+      /(apply|postul|aplica|formulario|inscri)/i.test(u));
   const apply = usable.find(looksLikeForm) ?? null;
   const contact = contactCandidates.find((u) => u !== apply && u !== startUrl && !JUNK_URL.test(u)) ?? null;
   return { apply, contact };

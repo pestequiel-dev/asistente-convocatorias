@@ -322,7 +322,9 @@ export async function crawlSite(startUrl: string, opts: CrawlOptions = {}): Prom
           const embeddedFields = (await page
             .evaluate(() => document.querySelectorAll("form input, form textarea, form select").length)
             .catch(() => 0)) as number;
-          if (embeddedFields >= 3 && !isJunk(item.url)) formCandidates.add(item.url);
+          // A contact form is not an application form.
+          const isContactPage = /(contact|contacto|contact-us|contáctanos|get-in-touch|hablemos)/i.test(item.url);
+          if (embeddedFields >= 3 && !isJunk(item.url) && !isContactPage) formCandidates.add(item.url);
 
           if (text && text.length >= 60) {
             const normalized = text.slice(0, 60000);

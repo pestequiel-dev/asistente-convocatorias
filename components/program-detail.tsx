@@ -403,7 +403,7 @@ export function ProgramDetail({ id }: { id: number }) {
               busy={busy}
             />
           )}
-          {(isOpp || isInv) && !(!p.applies_url && p.contact && /@/.test(p.contact)) && (
+          {(isOpp || isInv) && p.applies_url && (
             <DraftPanel
               programId={p.id}
               appliesUrl={p.applies_url}
@@ -412,6 +412,7 @@ export function ProgramDetail({ id }: { id: number }) {
               onChanged={load}
             />
           )}
+
           {!p.applies_url && p.contact && /@/.test(p.contact) && (
             <EmailPanel programId={p.id} to={p.contact} />
           )}
