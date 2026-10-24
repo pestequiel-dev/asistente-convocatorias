@@ -25,11 +25,11 @@ async function safeEval<T>(page: import("playwright").Page, fn: () => T, attempt
   throw last;
 }
 
-async function readPage(page: import("playwright").Page): Promise<FormReadResult> {
+async function readPage(page: import("playwright").Page, depth = 0): Promise<FormReadResult> {
   // tsx/esbuild injects a __name() helper that doesn't exist in the page.
   // The page may navigate mid-flight; the init script already covers that.
   await page.evaluate("window.__name = window.__name || function (f) { return f };").catch(() => {});
-  await page.waitForTimeout(2500);
+  await page.waitForTimeout(3500);
 
   const title = await page.title().catch(() => "");
   let host = "";
@@ -46,6 +46,7 @@ async function readPage(page: import("playwright").Page): Promise<FormReadResult
   }));
 
   const looksLikeLogin =
+    /\/(auth|signin|sign-in|login|session)/i.test(page.url()) ||
     host.includes("accounts.google.com") ||
     /(sign in|iniciar sesión|inicia sesión|acceder|request access|solicitar acceso|pedir acceso|necesitás permiso|you need permission)/i.test(
       `${title} ${probe.text}`
@@ -120,6 +121,20 @@ async function readPage(page: import("playwright").Page): Promise<FormReadResult
     .filter((q) => !SKIP.test(q.trim()))
     .filter((q) => !/(nunca envíes contraseñas|never submit passwords|se enviará una copia|borrar formulario|google forms|formularios de google)/i.test(q))
     .slice(0, 20);
+
+  // A landing page ("APLICA AQUÍ") is not the form: follow its button once.
+  if (!clean.length && depth < 2) {
+    const href = await safeEval(page, () => {
+      const links = [...document.querySelectorAll("a[href]")];
+      const hit = links.find((a) => /(aplica|apply|postul|inscrib|comenzar|start)/i.test(a.textContent || ""));
+      return hit ? (hit as HTMLAnchorElement).href : null;
+    }).catch(() => null);
+    if (href && href.startsWith("http")) {
+      await page.goto(href, { waitUntil: "domcontentloaded", timeout: 35_000 }).catch(() => {});
+      return readPage(page, depth + 1);
+    }
+  }
+
   return clean.length ? { status: "ok", questions: clean } : { status: "empty" };
 }
 
@@ -134,13 +149,34 @@ export async function extractFormQuestions(url: string, programId?: number): Pro
       try {
         browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
         const context = browser.contexts()[0] ?? (await browser.newContext());
+
+        // If the user logged in there and navigated to the form, that tab is the
+        // real destination — the stored URL may be just the platform root.
+        let target = url;
+        try {
+          const host = new URL(url).hostname;
+          const candidate = context
+            .pages()
+            .map((pg) => pg.url())
+            .find((u) => {
+              try {
+                return new URL(u).hostname === host && !/(signin|sign-in|login|auth|register|signup)/i.test(u);
+              } catch {
+                return false;
+              }
+            });
+          if (candidate) target = candidate;
+        } catch {
+          /* keep the stored url */
+        }
+
         const page = await context.newPage();
         // Survives redirects (forms.gle → accounts.google.com).
         await page.addInitScript({
           content: "window.__name = window.__name || function (f) { return f };",
         });
         try {
-          await page.goto(url, { waitUntil: "domcontentloaded", timeout: 35_000 });
+          await page.goto(target, { waitUntil: "domcontentloaded", timeout: 35_000 });
           return await readPage(page);
         } finally {
           await page.close().catch(() => {});
