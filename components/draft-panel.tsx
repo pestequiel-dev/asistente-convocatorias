@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Copy, Check, FileSignature, RefreshCw, ExternalLink, AlertTriangle } from "lucide-react";
+import { Copy, Check, FileSignature, RefreshCw, ExternalLink, AlertTriangle, MonitorUp } from "lucide-react";
 
 interface Answer {
   question: string;
@@ -23,6 +23,8 @@ export function DraftPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<number | null>(null);
+  const [prefilling, setPrefilling] = useState(false);
+  const [prefillMsg, setPrefillMsg] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/programs/${programId}/draft`, { cache: "no-store" });
@@ -84,13 +86,35 @@ export function DraftPanel({
           )}
           {(appliesUrl || contactUrl) && (
             <a
-              className="btn btn-sm btn-primary"
+              className="btn btn-sm"
               href={(appliesUrl || contactUrl) as string}
               target="_blank"
               rel="noreferrer"
             >
               Abrir formulario <ExternalLink size={13} />
             </a>
+          )}
+          {answers && (appliesUrl || contactUrl) && (
+            <button
+              className="btn btn-sm btn-primary"
+              disabled={prefilling}
+              onClick={async () => {
+                setPrefilling(true);
+                setPrefillMsg(null);
+                try {
+                  const res = await fetch(`/api/programs/${programId}/prefill`, { method: "POST" });
+                  const data = await res.json();
+                  if (!res.ok) throw new Error(data.error || "No se pudo abrir");
+                  setPrefillMsg("Abriendo una ventana de navegador con el formulario. Revisalo y enviá vos.");
+                } catch (e) {
+                  setPrefillMsg((e as Error).message);
+                } finally {
+                  setPrefilling(false);
+                }
+              }}
+            >
+              <MonitorUp size={13} /> Abrir pre-cargado
+            </button>
           )}
         </div>
       </div>
@@ -138,6 +162,19 @@ export function DraftPanel({
                 </div>
               ))}
             </div>
+
+            {prefillMsg && (
+              <div className="banner banner-info" style={{ marginTop: 14 }}>
+                <MonitorUp size={15} style={{ flex: "none", marginTop: 2 }} />
+                <div>
+                  {prefillMsg}
+                  <div className="tiny muted" style={{ marginTop: 4 }}>
+                    Se abre una ventana de Chromium aparte (no una pestaña del navegador). Completa los campos que
+                    puede matchear; lo que no reconoce lo deja vacío. Nunca envía.
+                  </div>
+                </div>
+              </div>
+            )}
 
             <p className="tiny muted" style={{ marginTop: 14 }}>
               Revisalo antes de enviar. La IA trabaja con tus documentos, pero la responsabilidad de lo que se envía
