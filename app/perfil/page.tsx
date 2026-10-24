@@ -8,7 +8,7 @@ import type { Profile } from "@/lib/types";
 type Form = Omit<Profile, "id" | "updated_at">;
 
 const EMPTY: Form = {
-  name: "", url: "", country: "", city: "", founder_name: "", founder_last: "", email: "", linkedin: "", phone: "", role: "", deck_url: "", round_details: "", legal_status: "", legal_structure_detail: "", can_invoice: "", founded: "", stage: "", sector: "",
+  name: "", url: "", country: "", city: "", founder_name: "", founder_last: "", email: "", linkedin: "", phone: "", role: "", deck_url: "", round_details: "", market_size: "", market_plan: "", traction_metrics: "", legal_status: "", legal_structure_detail: "", can_invoice: "", founded: "", stage: "", sector: "",
   description: "", team_size: null, founders: null, revenue_usd: null, customers: null,
   languages: "", tech_stack: "", has_product: "", notes: "",
 };
@@ -367,6 +367,57 @@ export default function PerfilPage() {
             <div className="field">
               <label className="label">Stack / tecnología</label>
               <input className="input" placeholder="IA generativa, LLMs, React" value={form.tech_stack} onChange={(e) => set("tech_stack", e.target.value)} />
+            </div>
+          </div>
+        </section>
+
+        <section className="card card-pad">
+          <div className="row" style={{ gap: 8, marginBottom: 4 }}>
+            <Building2 size={17} style={{ color: "var(--accent)" }} />
+            <h2>Mercado y tracción</h2>
+          </div>
+          <p className="small muted" style={{ marginBottom: 14 }}>
+            Los tres datos que más se repiten en las postulaciones. Si están acá, el borrador los usa en vez de
+            escribir <code>[FALTA: …]</code>.
+          </p>
+          <div className="grid-2">
+            <div className="field span-2">
+              <label className="label">Tamaño de mercado</label>
+              <textarea
+                className="textarea"
+                style={{ minHeight: 130 }}
+                placeholder={"TAM: … (fuente / método)\nSAM: … (a quién apuntamos primero)\nSOM: …"}
+                value={form.market_size}
+                onChange={(e) => set("market_size", e.target.value)}
+              />
+              <span className="hint">
+                Escribí TAM, SAM y SOM con el método o la fuente. Sin números verificados, mejor una estimación
+                explícita con supuestos que una cifra inventada.
+              </span>
+            </div>
+            <div className="field span-2">
+              <label className="label">Plan de expansión</label>
+              <textarea
+                className="textarea"
+                style={{ minHeight: 96 }}
+                placeholder="Ej.: arrancamos en Argentina; 2026 México y Chile; 2027 Colombia, Perú y Uruguay."
+                value={form.market_plan}
+                onChange={(e) => set("market_plan", e.target.value)}
+              />
+            </div>
+            <div className="field span-2">
+              <label className="label">Métricas de uso y retención</label>
+              <textarea
+                className="textarea"
+                style={{ minHeight: 96 }}
+                placeholder="Ej.: 2 colegios pagos · 85 docentes activos/semana · 3.100 estudiantes · 64% de retención docente a 3 meses · 12.400 notas de voz procesadas."
+                value={form.traction_metrics}
+                onChange={(e) => set("traction_metrics", e.target.value)}
+              />
+              <span className="hint">
+                Es lo que más se repite en las postulaciones (“métricas de uso o retención”). Cargalo una vez y
+                viaja a todos los borradores.
+              </span>
             </div>
           </div>
         </section>

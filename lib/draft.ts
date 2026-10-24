@@ -59,6 +59,7 @@ IDIOMA OBLIGATORIO: ${language === "en" ? "inglés (todas las preguntas y respue
 REGLAS:
 - Usá SOLO la información del perfil, los hitos y los documentos. NUNCA inventes métricas, clientes, fechas ni montos.
 - Si un dato necesario no está, escribí literalmente "[FALTA: qué dato]" dentro de la respuesta en vez de rellenar.
+- Si el perfil trae "market_size", "market_plan" o "traction_metrics", usá esos textos tal cual para mercado, expansión y tracción: no los reemplaces ni los marques como faltantes.
 - Cada respuesta: 110 a 170 palabras. Sin adjetivos vacíos, sin "somos apasionados". Hechos y decisiones.
 - Si hay una aplicación anterior entre los documentos, imitá su tono, su estructura y su nivel de detalle.
 - La última respuesta debe conectar con lo que este programa busca específicamente.

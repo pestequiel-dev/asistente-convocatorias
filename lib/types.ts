@@ -187,6 +187,9 @@ export interface Profile {
   role: string;
   deck_url: string;
   round_details: string;
+  market_size: string;
+  market_plan: string;
+  traction_metrics: string;
   legal_status: string;
   legal_structure_detail: string;
   can_invoice: string;

@@ -28,6 +28,9 @@ CREATE TABLE IF NOT EXISTS profile (
   role TEXT NOT NULL DEFAULT '',
   deck_url TEXT NOT NULL DEFAULT '',
   round_details TEXT NOT NULL DEFAULT '',
+  market_size TEXT NOT NULL DEFAULT '',
+  market_plan TEXT NOT NULL DEFAULT '',
+  traction_metrics TEXT NOT NULL DEFAULT '',
   legal_status TEXT NOT NULL DEFAULT '',
   legal_structure_detail TEXT NOT NULL DEFAULT '',
   can_invoice TEXT NOT NULL DEFAULT '',
@@ -246,6 +249,9 @@ function migrate(db: Database.Database) {
     ["role", "TEXT NOT NULL DEFAULT ''"],
     ["deck_url", "TEXT NOT NULL DEFAULT ''"],
     ["round_details", "TEXT NOT NULL DEFAULT ''"],
+    ["market_size", "TEXT NOT NULL DEFAULT ''"],
+    ["market_plan", "TEXT NOT NULL DEFAULT ''"],
+    ["traction_metrics", "TEXT NOT NULL DEFAULT ''"],
   ];
   const programCols = (db.prepare("PRAGMA table_info(programs)").all() as { name: string }[]).map((c) => c.name);
   const programAdditions: [string, string][] = [
