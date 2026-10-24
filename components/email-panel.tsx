@@ -35,12 +35,12 @@ export function EmailPanel({ programId, to }: { programId: number; to: string })
     : `mailto:${to}`;
 
   return (
-    <div className="card">
-      <div className="row-between wrap" style={{ marginBottom: 10 }}>
+    <section className="card">
+      <div className="panel-head">
         <div>
-          <div className="card-title">Email de contacto</div>
+          <h2>Email de contacto</h2>
           <div className="tiny muted" style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
-            <Mail size={12} /> {to}
+            <Mail size={12} aria-hidden="true" /> {to}
           </div>
         </div>
         <div className="row wrap" style={{ gap: 8 }}>
@@ -55,10 +55,17 @@ export function EmailPanel({ programId, to }: { programId: number; to: string })
         </div>
       </div>
 
-      {error && <div className="banner banner-warn" style={{ marginBottom: 10 }}>{error}</div>}
+      <div className="panel-body">
+      {error && <div className="banner banner-warn" style={{ marginBottom: 12 }}>{error}</div>}
+
+      {!email && !error && (
+        <p className="small muted" style={{ margin: 0 }}>
+          Genera un email corto con qué hace Mehmiro, tracción, la ronda y tus links.
+        </p>
+      )}
 
       {email && (
-        <div className="stack" style={{ gap: 12 }}>
+        <div className="stack" style={{ gap: 14 }}>
           <div className="field">
             <div className="row-between">
               <label className="label">Asunto</label>
@@ -93,6 +100,7 @@ export function EmailPanel({ programId, to }: { programId: number; to: string })
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </section>
   );
 }
