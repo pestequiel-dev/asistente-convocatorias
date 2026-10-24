@@ -1345,3 +1345,26 @@ textarea:focus-visible {
   border-color: var(--accent-line);
   color: var(--accent);
 }
+
+/* ---------- application draft ---------- */
+
+.draft-item {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.draft-q {
+  font-size: calc(15px * var(--fs));
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.draft-a {
+  font-size: calc(14.2px * var(--fs));
+  line-height: 1.65;
+  color: var(--text-2);
+  white-space: pre-wrap;
+}

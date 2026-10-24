@@ -13,6 +13,7 @@ import { KIND_META, EventBody, CompetitorBody, InvestorBody, ReferenceBody } fro
 import { buildRecommendation } from "@/lib/recommend";
 import { RecommendationCard } from "./recommendation";
 import { EvidenceSection } from "./evidence";
+import { DraftPanel } from "./draft-panel";
 
 interface SourceRow {
   id: number;
@@ -389,6 +390,9 @@ export function ProgramDetail({ id }: { id: number }) {
               onChanged={load}
               busy={busy}
             />
+          )}
+          {(isOpp || isInv) && (
+            <DraftPanel programId={p.id} appliesUrl={p.applies_url} contactUrl={p.contact_url} />
           )}
           {p.summary && !isRef && (
             <section className="card">

@@ -448,7 +448,7 @@ export default function PerfilPage() {
             <div className="field">
               <label className="label">Tipo</label>
               <select className="select" value={newDoc.kind} onChange={(e) => setNewDoc({ ...newDoc, kind: e.target.value })}>
-                {["Pitch deck", "Métricas", "Roadmap", "One-pager", "Finanzas", "Investigación", "Otro"].map((k) => (
+                {["Pitch deck", "Métricas", "Roadmap", "One-pager", "Finanzas", "Investigación", "Aplicación anterior", "Otro"].map((k) => (
                   <option key={k} value={k}>{k}</option>
                 ))}
               </select>

@@ -124,6 +124,13 @@ CREATE TABLE IF NOT EXISTS criteria (
 
 CREATE INDEX IF NOT EXISTS idx_criteria_program ON criteria(program_id);
 
+CREATE TABLE IF NOT EXISTS application_drafts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  program_id INTEGER NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS milestones (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
