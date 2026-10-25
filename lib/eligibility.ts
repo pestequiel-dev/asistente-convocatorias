@@ -8,11 +8,19 @@ const COUNTRIES = [
   "españa", "portugal", "estados unidos", "usa", "canadá", "reino unido",
 ];
 
+/** Whole-word match: "Cuba" must not be found inside "incubadora". */
+function mentionsCountry(text: string, country: string): boolean {
+  // "USA" as a verb ("usa el formulario") is not the United States.
+  if (country === "usa") return /(^|[^A-Za-z])USA([^A-Za-z]|$)/.test(text) || /\bU\.S\.A?\b/.test(text);
+  const esc = country.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^a-záéíóúüñ0-9])${esc}([^a-záéíóúüñ0-9]|$)`, "i").test(text);
+}
+
 function mentionsOtherCountry(text: string, own: string): string | null {
   const t = text.toLowerCase();
   const ownL = own.toLowerCase().trim();
   for (const c of COUNTRIES) {
-    if (t.includes(c) && !(ownL && (ownL.includes(c) || c.includes(ownL)))) {
+    if (mentionsCountry(t, c) && !(ownL && (ownL.includes(c) || c.includes(ownL)))) {
       // Avoid flagging a country only mentioned as an example list including our own
       return c;
     }
@@ -66,7 +74,7 @@ export function geoOverride(
   const text = raw.toLowerCase();
   if (EXCLUSION.test(text)) return null;
 
-  const named = COUNTRIES.filter((cn) => text.includes(cn));
+  const named = COUNTRIES.filter((cn) => mentionsCountry(text, cn));
   if (!named.length) return null;
 
   const own = p.country.toLowerCase().trim();
