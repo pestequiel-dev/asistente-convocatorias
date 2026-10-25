@@ -125,12 +125,18 @@ ${JSON.stringify(profile)}${docsBlock(docs)}`;
 
 export function buildSources(pages: CrawledPage[], maxChars = 60000) {
   const scored = [...pages].sort((a, b) => {
-    const w = (p: CrawledPage) =>
-      (/bases|condiciones|reglamento|terminos|términos|guidelines|rules/i.test(p.url) ? 3 : 0) +
+    const w = (p: CrawledPage) => {
+      let score = 0;
+      // Legal boilerplate is never the bases, and it is usually huge.
+      if (/terms|privacy|privacidad|cookies|aviso-legal|legal\b/i.test(p.url)) score -= 6;
+      if (/bases|condiciones|reglamento|guidelines|rules/i.test(p.url)) score += 3;
       // FAQs are where eligibility usually lives.
-      (/faq|preguntas|frequently|ayuda|dudas/i.test(p.url) ? 4 : 0) +
-      (/postul|aplic|apply|formulario|inscri/i.test(p.url) ? 2 : 0) +
-      (p.kind === "pdf" ? 2 : 0);
+      if (/faq|preguntas|frequently|ayuda|dudas/i.test(p.url)) score += 4;
+      if (/postul|aplic|apply|formulario|inscri/i.test(p.url)) score += 2;
+      if (/grant|opportunit|rfp|proposal|funding/i.test(p.url)) score += 3;
+      if (p.kind === "pdf") score += 2;
+      return score;
+    };
     return w(b) - w(a);
   });
 
@@ -140,7 +146,8 @@ export function buildSources(pages: CrawledPage[], maxChars = 60000) {
     const header = `\n\n=== FUENTE ${i + 1} (${p.kind.toUpperCase()}) ${p.url}\nTÍTULO: ${p.title}\n---\n`;
     const budget = maxChars - used - header.length;
     if (budget < 800) break;
-    const body = p.text.slice(0, budget);
+    // No single page (terms, policies) can eat the whole context.
+    const body = p.text.slice(0, Math.min(budget, 9000));
     chunks.push(header + body);
     used += header.length + body.length;
   }

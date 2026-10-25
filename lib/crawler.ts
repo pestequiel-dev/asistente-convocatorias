@@ -308,7 +308,9 @@ export async function crawlSite(startUrl: string, opts: CrawlOptions = {}): Prom
                   clone.querySelectorAll("script,style,noscript,svg,template").forEach((e) => e.remove());
                 }
                 const hidden = (clone?.textContent || "").replace(/[ \t]+/g, " ");
-                return hidden.length > visible.length * 1.35 ? hidden : visible;
+                // Only for short, accordion-style pages (FAQs). On big sites the
+                // hidden text is menus and legal boilerplate that buries the point.
+                return visible.length < 3000 && hidden.length > visible.length * 1.35 ? hidden : visible;
               })
               .catch(() => "")) as string
           );
