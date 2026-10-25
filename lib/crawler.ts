@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { isShortener, resolveShortUrl } from "./shortlinks";
 
 export interface CrawledPage {
   url: string;
@@ -296,8 +297,20 @@ export async function crawlSite(startUrl: string, opts: CrawlOptions = {}): Prom
 
           const title = cleanText(await page.title().catch(() => ""));
 
+          // innerText skips hidden nodes, and FAQ answers usually live inside
+          // collapsed accordions. Fall back to textContent when it has more.
           let text = cleanText(
-            (await page.evaluate(() => document.body?.innerText || "").catch(() => "")) as string
+            (await page
+              .evaluate(() => {
+                const visible = document.body?.innerText || "";
+                const clone = document.body?.cloneNode(true) as HTMLElement | undefined;
+                if (clone) {
+                  clone.querySelectorAll("script,style,noscript,svg,template").forEach((e) => e.remove());
+                }
+                const hidden = (clone?.textContent || "").replace(/[ \t]+/g, " ");
+                return hidden.length > visible.length * 1.35 ? hidden : visible;
+              })
+              .catch(() => "")) as string
           );
 
           // SPA shells render after the first paint: if we only got the footer,
@@ -350,9 +363,22 @@ export async function crawlSite(startUrl: string, opts: CrawlOptions = {}): Prom
           }
 
           for (const l of links) {
-            const abs = normalizeUrl(l.href, page.url() || item.url);
-            if (!abs) continue;
+            const raw = normalizeUrl(l.href, page.url() || item.url);
+            if (!raw) continue;
+            let abs: string = raw;
             if (SKIP.some((re) => re.test(abs))) continue;
+
+            // A bit.ly "postulá" button hides the real form.
+            if (isShortener(abs)) {
+              const real = await resolveShortUrl(abs).catch(() => null);
+              if (real && real !== abs) {
+                abs = real;
+                if (isFormHost(abs) || /forms\.gle|docs\.google\.com\/forms|typeform|airtable|jotform|tally/i.test(abs)) {
+                  formCandidates.add(abs);
+                  continue;
+                }
+              }
+            }
 
             if (isFormHost(abs)) {
               formCandidates.add(abs);

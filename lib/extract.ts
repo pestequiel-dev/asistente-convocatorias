@@ -52,6 +52,7 @@ REGLAS INNEGOCIABLES:
 2. Cada dato relevante lleva "url" (la fuente exacta) y "quote" (una cita textual copiada de esa fuente, máximo 300 caracteres). La cita tiene que existir palabra por palabra en el texto.
 3. Las fechas van en ISO 8601 (YYYY-MM-DDTHH:mm:ss.sssZ). Si no hay hora, usá 23:59 en la timezone indicada; si no hay timezone, usá "America/Argentina/Buenos_Aires" solo si el texto sugiere Argentina, si no null.
 4. "criteria" son SOLO requisitos de elegibilidad explícitos y verificables (quién puede postular, constitución legal, país, facturación, etapa, equipo, sector, edad, etc.). No agregues criterios obvios ni deducidos. Un criterio por concepto, redactado de forma atómica.
+4b. Las páginas de PREGUNTAS FRECUENTES y "quién puede postular" suelen contener los requisitos reales (edad, residencia, departamento/provincia, compromiso de dedicación). Revisalas siempre y extraé esos requisitos, citando la frase textual.
 5. "applies_url" es el link real al formulario de postulación (Typeform, Google Forms, Airtable, etc.), no la home.
 6. Si hay varias fechas, cargalas todas en "dates" y marcá la de cierre de postulaciones con kind "closing".
 
@@ -126,6 +127,8 @@ export function buildSources(pages: CrawledPage[], maxChars = 60000) {
   const scored = [...pages].sort((a, b) => {
     const w = (p: CrawledPage) =>
       (/bases|condiciones|reglamento|terminos|términos|guidelines|rules/i.test(p.url) ? 3 : 0) +
+      // FAQs are where eligibility usually lives.
+      (/faq|preguntas|frequently|ayuda|dudas/i.test(p.url) ? 4 : 0) +
       (/postul|aplic|apply|formulario|inscri/i.test(p.url) ? 2 : 0) +
       (p.kind === "pdf" ? 2 : 0);
     return w(b) - w(a);
