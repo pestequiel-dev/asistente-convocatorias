@@ -100,7 +100,9 @@ CREATE TABLE IF NOT EXISTS programs (
   analyzed_at TEXT,
   started_at TEXT,
   applied_at TEXT,
-  criteria_source TEXT
+  criteria_source TEXT,
+  correction TEXT,
+  corrected_at TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_programs_status ON programs(status);
@@ -265,6 +267,8 @@ function migrate(db: Database.Database) {
     ["started_at", "TEXT"],
     ["applied_at", "TEXT"],
     ["criteria_source", "TEXT"],
+    ["correction", "TEXT"],
+    ["corrected_at", "TEXT"],
     ["contact_url", "TEXT"],
     ["meta", "TEXT"],
     ["diff_summary", "TEXT"],

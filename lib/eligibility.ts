@@ -277,13 +277,15 @@ interface MatchResult {
 export async function matchWithLlm(
   criteria: { text: string; category: string; quote: string | null; note?: string | null }[],
   p: Profile,
-  docs?: { label: string; content: string | null }[]
+  docs?: { label: string; content: string | null }[],
+  correction?: string | null
 ): Promise<MatchResult[] | null> {
   if (!llmConfig() || criteria.length === 0) return null;
   try {
     const { json } = await chatJson<{ results: { index: number; verdict: string; reason: string }[] }>(
       `Sos un analista que evalúa si una startup cumple los requisitos de una convocatoria.
 Te doy el perfil REAL de la startup y una lista de criterios extraídos de las bases.
+Si el usuario aportó una CORRECCIÓN, tomala como verdad por encima de cualquier interpretación tuya de las bases (él leyó el sitio). Usala para corregir los veredictos, no la ignores.
 Para cada criterio devolvés un veredicto:
 - "cumple": el perfil satisface el requisito de forma clara.
 - "no_cumple": el perfil contradice el requisito.
@@ -296,7 +298,7 @@ Usá los DOCUMENTOS DE CONTEXTO como fuente de verdad sobre tracción, equipo, p
 Si un criterio trae "NOTA DEL USUARIO", es información que el fundador aportó explícitamente: tratala como dato veraz y resolvé el veredicto con eso.
 Importante: la startup puede operar bajo la estructura legal de un tercero (una cooperativa). Si la base exige personería jurídica propia y el perfil dice que opera bajo un tercero, el veredicto es "ambiguo" (no "cumple"): hay que confirmar si la cooperativa puede ser la solicitante.
 Devolvés SOLO JSON: {"results":[{"index":0,"verdict":"cumple|no_cumple|falta_dato|ambiguo|no_aplica","reason":"..."}]}`,
-      `PERFIL:\n${JSON.stringify(p, null, 2)}\n${docsContext(docs)}\nCRITERIOS:\n${criteria
+      `PERFIL:\n${JSON.stringify(p, null, 2)}\n${docsContext(docs)}\n${correction ? `CORRECCIÓN DEL USUARIO (verdad):\n${correction}\n\n` : ""}CRITERIOS:\n${criteria
         .map((c, i) => `${i}. [${c.category}] ${c.text}${c.note ? `\n   NOTA DEL USUARIO (dato aportado por el fundador): ${c.note}` : ""}`)
         .join("\n")}`,
       { maxTokens: 3000 }

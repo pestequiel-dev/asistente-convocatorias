@@ -16,6 +16,7 @@ import { EvidenceSection } from "./evidence";
 import { DraftPanel } from "./draft-panel";
 import { EmailPanel } from "./email-panel";
 import { ContactPanel } from "./contact-panel";
+import { CorrectionCard } from "./correction-card";
 
 interface SourceRow {
   id: number;
@@ -398,6 +399,14 @@ export function ProgramDetail({ id }: { id: number }) {
       <div className="detail-grid">
         <div className="stack">
           {rec && <RecommendationCard rec={rec} />}
+          {(isOpp || isInv) && (
+            <CorrectionCard
+              programId={p.id}
+              correction={p.correction}
+              correctedAt={p.corrected_at}
+              onChanged={load}
+            />
+          )}
           {isOpp && (
             <EvidenceSection
               criteria={criteria}

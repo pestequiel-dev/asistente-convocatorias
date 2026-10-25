@@ -115,6 +115,8 @@ export interface Program {
   diff_at: string | null;
   applied_at: string | null;
   criteria_source: string | null;
+  correction: string | null;
+  corrected_at: string | null;
   notes: string | null;
   priority: number;
   created_at: string;

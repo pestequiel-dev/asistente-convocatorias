@@ -557,10 +557,12 @@ export async function reevaluateProgram(id: number) {
   if (!stored.length) return { ok: false, error: "No hay criterios para re-evaluar" };
 
   const docs = loadDocs();
+  const program = db.prepare("SELECT correction FROM programs WHERE id = ?").get(id) as { correction: string | null } | undefined;
   const llmResults = await matchWithLlm(
     stored.map((c) => ({ text: c.text, category: c.category ?? "otro", quote: c.quote, note: c.user_note })),
     profile,
-    docs
+    docs,
+    program?.correction ?? null
   );
   const update = db.prepare("UPDATE criteria SET verdict = ?, reason = ? WHERE id = ?");
   const verdicts = stored.map((c, i) => {
