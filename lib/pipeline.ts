@@ -550,6 +550,19 @@ function saveReference(
 
 /* ------------------------------ shared ------------------------------------ */
 
+/** If the manual status just mirrored the analysis, keep it in sync. */
+function syncPipelineStatus(db: ReturnType<typeof getDb>, id: number, verdict: string) {
+  const row = db.prepare("SELECT pipeline_status FROM programs WHERE id = ?").get(id) as
+    | { pipeline_status: string | null }
+    | undefined;
+  const current = row?.pipeline_status ?? null;
+  if (current !== "eligible" && current !== "not_eligible") return; // manual: don't touch
+  const next = verdict === "eligible" ? "eligible" : verdict === "not_eligible" ? "not_eligible" : "reviewing";
+  if (next !== current) {
+    db.prepare("UPDATE programs SET pipeline_status = ?, updated_at = ? WHERE id = ?").run(next, nowIso(), id);
+  }
+}
+
 export async function reevaluateProgram(id: number) {
   const db = getDb();
   const profile = db.prepare("SELECT * FROM profile WHERE id = 1").get() as Profile;
@@ -578,6 +591,7 @@ export async function reevaluateProgram(id: number) {
     nowIso(),
     id
   );
+  syncPipelineStatus(db, id, verdict);
   return { ok: true, score, verdict };
 }
 
@@ -612,6 +626,7 @@ export async function reevaluateCriterion(criterionId: number, note: string) {
     nowIso(),
     c.program_id
   );
+  syncPipelineStatus(db, c.program_id, verdict);
 
   return {
     ok: true as const,
