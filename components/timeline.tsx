@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { CalendarDays, Rows3 } from "lucide-react";
 import type { Program } from "@/lib/types";
 import { KIND_META } from "./kind-body";
-import { fmtDate, daysUntil } from "./format";
+import { fmtDate, daysUntil, PIPELINE, PIPELINE_INVESTOR } from "./format";
 
 export const TZ_AR = "America/Argentina/Buenos_Aires";
 
@@ -122,6 +122,10 @@ function TimelineItem({ p }: { p: Program }) {
         </div>
         <div className="tl-meta">
           <span className={`badge badge-${meta.tone}`}>{meta.label}</span>
+          {(() => {
+            const state = (p.kind === "inversor" ? PIPELINE_INVESTOR : PIPELINE)[p.pipeline_status];
+            return state ? <span className={`badge badge-${state.tone}`}>{state.label}</span> : null;
+          })()}
           {!p.kind_confirmed && <span className="badge badge-amber">Sin confirmar</span>}
           <span className={`tl-cd tone-${cd.tone}`}>{cd.text}</span>
           {p.organization && <span className="tl-org">{p.organization}</span>}
