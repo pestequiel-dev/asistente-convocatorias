@@ -1,4 +1,4 @@
-import { getDb, getSetting, nowIso } from "./db";
+import { getDb, getSetting, logEvent, nowIso } from "./db";
 import { crawlSite, resolveStartUrl, type CrawledPage } from "./crawler";
 import { classify, fetchPreview } from "./classify";
 import { extract, criteriaFromForm, type ExtractionDate } from "./extract";
@@ -219,6 +219,7 @@ export async function analyzeProgram(
       log(id, "aceleradora con formulario: tratada como convocatoria");
     }
 
+    logEvent(id, "analisis", `Analizado como ${kind} (${Math.round(cls.confidence * 100)}%)`);
     if (kind === "convocatoria") {
       await saveOpportunity(id, profile, crawled.pages, crawled.formCandidates, crawled.contactCandidates, crawled.startUrl);
     } else if (kind === "evento") {

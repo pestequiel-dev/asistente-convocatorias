@@ -17,6 +17,7 @@ import { DraftPanel } from "./draft-panel";
 import { EmailPanel } from "./email-panel";
 import { ContactPanel } from "./contact-panel";
 import { CorrectionCard } from "./correction-card";
+import { HistoryCard } from "./history";
 
 interface SourceRow {
   id: number;
@@ -209,13 +210,15 @@ export function ProgramDetail({ id }: { id: number }) {
               <span className="badge badge-gray">{isInv ? "Cerrado" : "Cerrada"}</span>
             )}
 
-            {(isOpp || isInv) && (p.applies_url || p.contact_url) && (
-              p.applied_at ? (
-                <span className="badge badge-green">Postulación enviada · {fmtDate(p.applied_at)}</span>
+            {(isOpp || isInv) &&
+              (p.applies_url || p.contact_url) &&
+              (p.applied_at || ["applied", "won", "lost"].includes(p.pipeline_status) ? (
+                <span className="badge badge-green">
+                  Postulación enviada{p.applied_at ? ` · ${fmtDate(p.applied_at)}` : ""}
+                </span>
               ) : (
                 <span className="badge badge-amber">Postulación sin enviar</span>
-              )
-            )}
+              ))}
             {!p.kind_confirmed && <span className="badge badge-amber">sin confirmar</span>}
             {p.kind_confidence != null && (
               <span className="tiny muted">clasificado al {Math.round(p.kind_confidence * 100)}%</span>
@@ -399,6 +402,7 @@ export function ProgramDetail({ id }: { id: number }) {
       <div className="detail-grid">
         <div className="stack">
           {rec && <RecommendationCard rec={rec} />}
+          <HistoryCard programId={p.id} onChanged={load} />
           {(isOpp || isInv) && (
             <CorrectionCard
               programId={p.id}

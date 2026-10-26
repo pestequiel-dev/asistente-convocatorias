@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getDb, nowIso } from "@/lib/db";
+import { getDb, logEvent, nowIso } from "@/lib/db";
+import { statusLabel } from "@/lib/labels";
 import { analyzeProgram, reevaluateProgram } from "@/lib/pipeline";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +42,17 @@ export async function PATCH(req: Request, ctx: Ctx) {
   if ("kind" in body) sets.push("kind_confirmed = 1");
   sets.push("updated_at = ?");
   values.push(nowIso(), Number(id));
+
+  if (body.pipeline_status) {
+    const before = db.prepare("SELECT pipeline_status FROM programs WHERE id = ?").get(Number(id)) as { pipeline_status: string } | undefined;
+    if (before && before.pipeline_status !== body.pipeline_status) {
+      logEvent(Number(id), "estado", `Estado: ${statusLabel(before.pipeline_status)} → ${statusLabel(String(body.pipeline_status))}`);
+    }
+    // "Pitch enviado" implies it was sent, even if the date wasn't registered.
+    if (body.pipeline_status === "applied") {
+      db.prepare("UPDATE programs SET applied_at = COALESCE(applied_at, ?) WHERE id = ?").run(nowIso(), Number(id));
+    }
+  }
 
   db.prepare(`UPDATE programs SET ${sets.join(", ")} WHERE id = ?`).run(...values);
   return NextResponse.json({ ok: true });

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getDb, logEvent } from "@/lib/db";
 import { generateContactMessage } from "@/lib/email";
 import { detectLanguage } from "@/lib/lang";
 import type { Profile, Program } from "@/lib/types";
@@ -25,6 +25,7 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
 
   try {
     const message = await generateContactMessage(program, profile, docs, language);
+    logEvent(Number(id), "mensaje", `Mensaje de contacto preparado (${language})`);
     // Stored as a draft so the prefill can fill the contact form's message box.
     db.prepare(
       "INSERT INTO application_drafts (program_id, content, source, created_at) VALUES (?, ?, 'contact', ?)"

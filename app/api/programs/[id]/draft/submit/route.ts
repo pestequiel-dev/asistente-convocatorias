@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb, nowIso } from "@/lib/db";
+import { getDb, logEvent, nowIso } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +43,7 @@ export async function POST(_req: Request, ctx: Ctx) {
     .prepare("INSERT INTO profile_docs (label, url, kind, content, created_at) VALUES (?, ?, ?, ?, ?)")
     .run(label, program.applies_url || program.contact_url || "", "Aplicación anterior", body, nowIso());
 
+  logEvent(Number(id), "envio", "Marcada como enviada");
   // Any kind with a real form (convocatoria, inversor) can be "sent".
   db.prepare("UPDATE programs SET pipeline_status = 'applied', applied_at = ?, updated_at = ? WHERE id = ?").run(
     nowIso(),

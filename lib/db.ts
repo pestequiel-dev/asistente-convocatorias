@@ -9,6 +9,14 @@ const SCHEMA = `
 PRAGMA journal_mode = WAL;
 PRAGMA busy_timeout = 8000;
 
+CREATE TABLE IF NOT EXISTS program_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  program_id INTEGER NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  detail TEXT,
+  created_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
@@ -360,6 +368,17 @@ export function allSettings(): Record<string, string> {
     value: string;
   }[];
   return Object.fromEntries(rows.map((r) => [r.key, r.value]));
+}
+
+/** Historial: todo lo que se hizo sobre una ficha, en orden. */
+export function logEvent(programId: number, kind: string, detail?: string | null) {
+  try {
+    getDb()
+      .prepare("INSERT INTO program_events (program_id, kind, detail, created_at) VALUES (?, ?, ?, ?)")
+      .run(programId, kind, detail ?? null, nowIso());
+  } catch {
+    /* el historial nunca debe romper la acción */
+  }
 }
 
 export function nowIso() {

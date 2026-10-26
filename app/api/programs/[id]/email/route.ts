@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getDb, logEvent } from "@/lib/db";
 import { generateEmail } from "@/lib/email";
 import { detectLanguage } from "@/lib/lang";
 import type { Profile, Program } from "@/lib/types";
@@ -26,6 +26,7 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
   const language = detectLanguage(corpus || (program.summary ?? ""));
   try {
     const email = await generateEmail(program, profile, docs, language);
+    logEvent(Number(id), "email", `Email preparado (${language})`);
     return NextResponse.json({ email, to: program.contact });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });

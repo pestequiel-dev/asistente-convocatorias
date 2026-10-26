@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb, nowIso } from "@/lib/db";
+import { getDb, logEvent, nowIso } from "@/lib/db";
 import { reevaluateProgram } from "@/lib/pipeline";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +22,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     Number(id)
   );
 
+  logEvent(Number(id), "correccion", text);
   const result = await reevaluateProgram(Number(id)).catch((e) => ({ ok: false, error: (e as Error).message }));
   return NextResponse.json({ correction: text, result });
 }

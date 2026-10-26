@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { spawn } from "node:child_process";
 import path from "node:path";
 import fs from "node:fs";
-import { getDb } from "@/lib/db";
+import { getDb, logEvent } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +31,7 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
     env: process.env,
   });
   child.unref();
+  logEvent(Number(id), "prefill", "Formulario abierto pre-cargado");
 
   return NextResponse.json({ ok: true, message: "Se está abriendo el navegador con el formulario." });
 }
