@@ -1,0 +1,13 @@
+import { chromium } from "playwright";
+const b = await chromium.launch({ headless: true, executablePath: "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" });
+const p = await b.newPage({ viewport: { width: 1440, height: 1000 } });
+await p.goto("http://127.0.0.1:3100/resumen", { waitUntil: "networkidle" });
+await p.waitForTimeout(1000);
+const count = () => p.evaluate(() => document.querySelectorAll("table.table tbody tr").length);
+const all = await count();
+await p.getByRole("button", { name: /^Descartadas$/ }).click();
+await p.waitForTimeout(600);
+const discarded = await count();
+const hasRow = await p.evaluate(() => document.body.innerText.includes("GESAwards"));
+console.log(JSON.stringify({ all, discarded, hasRow }));
+await b.close();

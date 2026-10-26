@@ -55,6 +55,8 @@ export function ProgramDetail({ id }: { id: number }) {
   const [busy, setBusy] = useState(false);
   const [notes, setNotes] = useState("");
   const [reverify, setReverify] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const [discardReason, setDiscardReason] = useState("");
   const [notesSaved, setNotesSaved] = useState(false);
   const [slow, setSlow] = useState(false);
   const [altUrl, setAltUrl] = useState("");
@@ -720,6 +722,32 @@ export function ProgramDetail({ id }: { id: number }) {
                 onChange={(e) => setNotes(e.target.value)}
               />
             </div>
+            {discardOpen && (
+              <div className="stack" style={{ gap: 8, marginBottom: 10 }}>
+                <textarea
+                  className="textarea"
+                  id="motivo-descarte"
+                  style={{ minHeight: 70 }}
+                  placeholder="Motivo del descarte (queda en el historial)."
+                  value={discardReason}
+                  onChange={(e) => setDiscardReason(e.target.value)}
+                />
+                <div className="row" style={{ gap: 8 }}>
+                  <button
+                    className="btn btn-sm btn-primary"
+                    disabled={!discardReason.trim()}
+                    onClick={async () => {
+                      await patch({ pipeline_status: "discarded", notes: discardReason });
+                      setDiscardOpen(false);
+                      setDiscardReason("");
+                    }}
+                  >
+                    Descartar con motivo
+                  </button>
+                  <button className="btn btn-sm" onClick={() => setDiscardOpen(false)}>Cancelar</button>
+                </div>
+              </div>
+            )}
             {(isOpp || isInv) && (
               <label className="row small" style={{ gap: 8, alignItems: "center", marginBottom: 10 }}>
                 <input
@@ -734,7 +762,12 @@ export function ProgramDetail({ id }: { id: number }) {
               <span className="tiny" style={{ color: notesSaved ? "var(--ok)" : "var(--muted)" }}>
                 {notesSaved ? "Guardado ✓" : ""}
               </span>
-              <button className="btn btn-sm btn-primary" onClick={saveEntry}>Guardar</button>
+              <div className="row" style={{ gap: 8 }}>
+                <button className="btn btn-sm" onClick={() => setDiscardOpen((v) => !v)}>
+                  <Trash2 size={13} /> Descartar
+                </button>
+                <button className="btn btn-sm btn-primary" onClick={saveEntry}>Guardar</button>
+              </div>
             </div>
           </section>
 

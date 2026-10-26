@@ -44,6 +44,7 @@ export function Dashboard({ programs, profileName, hasKey, mode }: Props) {
   const router = useRouter();
   const [rows, setRows] = useState<Program[]>(programs);
   const [tab, setTab] = useState<Kind | "all">("all");
+  const [showDiscarded, setShowDiscarded] = useState(false);
   const [q, setQ] = useState("");
   const [drafts, setDrafts] = useState<Record<number, Kind>>({});
   const [view, setView] = useState<"timeline" | "table">("timeline");
@@ -112,7 +113,8 @@ export function Dashboard({ programs, profileName, hasKey, mode }: Props) {
   }, [rows]);
 
   const filtered = useMemo(() => {
-    let list = rows;
+    // Las descartadas no ensucian las listas: viven en su propia pestaña.
+    let list = showDiscarded ? rows.filter((r) => r.pipeline_status === "discarded") : rows.filter((r) => r.pipeline_status !== "discarded");
     if (tab !== "all") list = list.filter((r) => r.kind === tab);
     if (q.trim()) {
       const s = q.toLowerCase();
@@ -133,7 +135,7 @@ export function Dashboard({ programs, profileName, hasKey, mode }: Props) {
       });
     }
     return list;
-  }, [rows, tab, q, minFit, order]);
+  }, [rows, tab, q, minFit, order, showDiscarded]);
 
   const dateTabs = tab === "all" || tab === "convocatoria" || tab === "evento";
   const showTimeline = mode !== "summary" && view === "timeline" && dateTabs;
@@ -302,10 +304,17 @@ export function Dashboard({ programs, profileName, hasKey, mode }: Props) {
       )}
 
       <div className="filters">
+        <button
+          className={`chip${showDiscarded ? " active" : ""}`}
+          onClick={() => setShowDiscarded((v) => !v)}
+          title="Ver solo las fichas descartadas"
+        >
+          Descartadas
+        </button>
         {TABS.map((t) => {
           const n = t.id === "all" ? rows.length : rows.filter((r) => r.kind === t.id).length;
           return (
-            <button key={t.id} className={`chip${tab === t.id ? " active" : ""}`} onClick={() => setTab(t.id)}>
+            <button key={t.id} className={`chip${tab === t.id && !showDiscarded ? " active" : ""}`} onClick={() => { setShowDiscarded(false); setTab(t.id); }}>
               {t.label} <span style={{ opacity: 0.55 }}>{n}</span>
             </button>
           );

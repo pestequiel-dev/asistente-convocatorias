@@ -8,6 +8,7 @@ export const STATUS_LABEL: Record<string, string> = {
   won: "Ganada",
   lost: "Perdida",
   closed: "Cerrada",
+  discarded: "Descartada",
 };
 
 export function statusLabel(code: string): string {
