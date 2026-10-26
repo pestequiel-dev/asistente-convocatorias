@@ -14,6 +14,7 @@ const LABEL: Record<string, string> = {
   mensaje: "Mensaje",
   prefill: "Prellenado",
   nota: "Nota",
+  tipo: "Tipo",
 };
 
 export function HistoryCard({ programId, version = 0 }: { programId: number; version?: number }) {
