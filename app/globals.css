@@ -462,9 +462,11 @@ table.table {
 .detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 20px;
+  gap: 24px;
   align-items: start;
 }
+
+.detail-grid > .stack { gap: 22px; }
 
 .panel-head {
   padding: 16px 20px;

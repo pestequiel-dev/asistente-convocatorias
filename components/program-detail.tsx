@@ -409,42 +409,10 @@ export function ProgramDetail({ id }: { id: number }) {
       <div className="detail-grid">
         <div className="stack">
           {rec && <RecommendationCard rec={rec} />}
-          <HistoryCard programId={p.id} />
-          {isOpp && (
-            <EvidenceSection
-              criteria={criteria}
-              onReevaluate={reevaluate}
-              onChanged={load}
-              busy={busy}
-            />
-          )}
-          {(isOpp || isInv) && p.applies_url && (
-            <DraftPanel
-              programId={p.id}
-              appliesUrl={p.applies_url}
-              contactUrl={p.contact_url}
-              appliedAt={p.applied_at}
-              onChanged={load}
-            />
-          )}
-
-          {!p.applies_url && p.contact_url && <ContactPanel programId={p.id} url={p.contact_url} />}
-
-          {!p.applies_url && p.contact && /@/.test(p.contact) && (
-            <EmailPanel programId={p.id} to={p.contact} />
-          )}
-
-          {p.summary && !isRef && (
-            <section className="card">
-              <div className="panel-head"><h2>Resumen</h2></div>
-              <div className="panel-body">
-                <p style={{ lineHeight: 1.6 }}>{p.summary}</p>
-              </div>
-            </section>
-          )}
 
           {isOpp && (
           <section className="card">
+            <div className="panel-head"><h2>Ficha</h2></div>
             <div className="panel-body">
               <dl className="def-list">
                 <dt>Tipo</dt><dd>{p.type || "—"}</dd>
@@ -469,12 +437,46 @@ export function ProgramDetail({ id }: { id: number }) {
           </section>
           )}
 
-
-
           {isEvent && <EventBody program={p} />}
           {isComp && <CompetitorBody program={p} />}
           {isInv && <InvestorBody program={p} />}
           {isRef && <ReferenceBody program={p} />}
+
+          <HistoryCard programId={p.id} />
+
+          {(isOpp || isInv) && p.applies_url && (
+            <DraftPanel
+              programId={p.id}
+              appliesUrl={p.applies_url}
+              contactUrl={p.contact_url}
+              appliedAt={p.applied_at}
+              onChanged={load}
+            />
+          )}
+
+          {!p.applies_url && p.contact_url && <ContactPanel programId={p.id} url={p.contact_url} />}
+
+          {!p.applies_url && p.contact && /@/.test(p.contact) && (
+            <EmailPanel programId={p.id} to={p.contact} />
+          )}
+
+          {isOpp && (
+            <EvidenceSection
+              criteria={criteria}
+              onReevaluate={reevaluate}
+              onChanged={load}
+              busy={busy}
+            />
+          )}
+
+          {isOpp && p.summary && !isRef && (
+            <section className="card">
+              <div className="panel-head"><h2>Resumen</h2></div>
+              <div className="panel-body">
+                <p style={{ lineHeight: 1.6 }}>{p.summary}</p>
+              </div>
+            </section>
+          )}
 
           {(isOpp || isEvent) && (
           <section className="card">
