@@ -208,7 +208,7 @@ export function ProgramDetail({ id }: { id: number }) {
               <span className={toneClass(p.criteria_source === "form" ? "amber" : verdict.tone)}>
                 {p.criteria_source === "form"
                   ? "Elegibilidad sin verificar"
-                  : `${verdict.label} · ${p.eligibility_score}%`}
+                  : `Elegibilidad ${p.eligibility_score}%`}
               </span>
             )}
             {isInv && (
@@ -221,22 +221,16 @@ export function ProgramDetail({ id }: { id: number }) {
                 Relevancia {p.relevance_score}%
               </span>
             )}
-            {p.pipeline_status === "closed" && (
-              <span className="badge badge-gray">{isInv ? "Cerrado" : "Cerrada"}</span>
+            {(isOpp || isInv) && (
+              <span className={`badge badge-${(isInv ? PIPELINE_INVESTOR : PIPELINE)[p.pipeline_status]?.tone ?? "gray"}`}>
+                {(isInv ? PIPELINE_INVESTOR : PIPELINE)[p.pipeline_status]?.label ?? p.pipeline_status}
+                {p.applied_at ? ` · ${fmtDate(p.applied_at)}` : ""}
+              </span>
             )}
-
-            {(isOpp || isInv) &&
-              (p.applies_url || p.contact_url) &&
-              (p.applied_at || ["applied", "won", "lost"].includes(p.pipeline_status) ? (
-                <span className="badge badge-green">
-                  Postulación enviada{p.applied_at ? ` · ${fmtDate(p.applied_at)}` : ""}
-                </span>
-              ) : (
-                <span className="badge badge-amber">Postulación sin enviar</span>
-              ))}
-            {!p.kind_confirmed && <span className="badge badge-amber">sin confirmar</span>}
-            {p.kind_confidence != null && (
-              <span className="tiny muted">clasificado al {Math.round(p.kind_confidence * 100)}%</span>
+            {!p.kind_confirmed && (
+              <button className="badge badge-amber" style={{ cursor: "pointer", border: 0 }} onClick={() => patch({ kind: p!.kind })} title="Dar por bueno el tipo detectado">
+                sin confirmar · confirmar
+              </button>
             )}
           </div>
           <h1 style={{ fontSize: "calc(23px * var(--fs))", lineHeight: 1.25 }}>{p.title || p.url}</h1>
@@ -745,6 +739,10 @@ export function ProgramDetail({ id }: { id: number }) {
               <div className="row-between small"><span className="muted row" style={{ gap: 5 }}><Database size={12} /> Páginas</span><strong>{p.pages_crawled ?? 0}</strong></div>
               <div className="row-between small"><span className="muted row" style={{ gap: 5 }}><Sparkles size={12} /> Tokens</span><strong>{p.tokens ?? 0}</strong></div>
               <div className="row-between small"><span className="muted">Modo</span><strong>{p.mode ?? "—"}</strong></div>
+              <div className="row-between small">
+                <span className="muted">Clasificación</span>
+                <strong>{p.kind_confidence != null ? `${Math.round(p.kind_confidence * 100)}%` : "—"}</strong>
+              </div>
               <div className="row-between small"><span className="muted">Analizado</span><strong>{p.analyzed_at ? fmtDateTime(p.analyzed_at) : "—"}</strong></div>
               <div className="row-between small"><span className="muted">Creado</span><strong>{fmtDate(p.created_at)}</strong></div>
             </div>
