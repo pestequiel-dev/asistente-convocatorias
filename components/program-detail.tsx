@@ -16,7 +16,6 @@ import { EvidenceSection } from "./evidence";
 import { DraftPanel } from "./draft-panel";
 import { EmailPanel } from "./email-panel";
 import { ContactPanel } from "./contact-panel";
-import { CorrectionCard } from "./correction-card";
 import { HistoryCard } from "./history";
 
 interface SourceRow {
@@ -55,6 +54,7 @@ export function ProgramDetail({ id }: { id: number }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [notes, setNotes] = useState("");
+  const [reverify, setReverify] = useState(false);
   const [notesSaved, setNotesSaved] = useState(false);
   const [slow, setSlow] = useState(false);
   const [altUrl, setAltUrl] = useState("");
@@ -136,10 +136,25 @@ export function ProgramDetail({ id }: { id: number }) {
     router.push("/");
   }
 
-  async function saveNotes() {
-    await patch({ notes });
-    setNotesSaved(true);
-    setTimeout(() => setNotesSaved(false), 1800);
+  /** Un solo botón: estado + nota (+ re-verificar si lo pedís). */
+  async function saveEntry() {
+    setBusy(true);
+    try {
+      await patch({ notes });
+      if (reverify && notes.trim() && (p?.kind === "convocatoria" || p?.kind === "inversor")) {
+        await fetch(`/api/programs/${id}/correction`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: notes.trim() }),
+        });
+        await load();
+      }
+      setNotesSaved(true);
+      setReverify(false);
+      setTimeout(() => setNotesSaved(false), 1800);
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (error) {
@@ -402,15 +417,7 @@ export function ProgramDetail({ id }: { id: number }) {
       <div className="detail-grid">
         <div className="stack">
           {rec && <RecommendationCard rec={rec} />}
-          <HistoryCard programId={p.id} onChanged={load} />
-          {(isOpp || isInv) && (
-            <CorrectionCard
-              programId={p.id}
-              correction={p.correction}
-              correctedAt={p.corrected_at}
-              onChanged={load}
-            />
-          )}
+          <HistoryCard programId={p.id} />
           {isOpp && (
             <EvidenceSection
               criteria={criteria}
@@ -704,8 +711,9 @@ export function ProgramDetail({ id }: { id: number }) {
               </div>
             )}
             <div className="field" style={{ marginBottom: 12 }}>
-              <label className="label">Notas</label>
+              <label className="label" htmlFor="notas-gestion">Notas</label>
               <textarea
+                id="notas-gestion"
                 className="textarea"
                 style={{ minHeight: 92, fontSize: "calc(13px * var(--fs))" }}
                 placeholder="Contacto, requisitos a confirmar, próximo paso…"
@@ -713,11 +721,21 @@ export function ProgramDetail({ id }: { id: number }) {
                 onChange={(e) => setNotes(e.target.value)}
               />
             </div>
+            {(isOpp || isInv) && (
+              <label className="row small" style={{ gap: 8, alignItems: "center", marginBottom: 10 }}>
+                <input
+                  type="checkbox"
+                  checked={reverify}
+                  onChange={(e) => setReverify(e.target.checked)}
+                />
+                Usar esta nota para re-verificar la elegibilidad
+              </label>
+            )}
             <div className="row-between">
               <span className="tiny" style={{ color: notesSaved ? "var(--ok)" : "var(--muted)" }}>
                 {notesSaved ? "Guardado ✓" : ""}
               </span>
-              <button className="btn btn-sm" onClick={saveNotes}>Guardar notas</button>
+              <button className="btn btn-sm btn-primary" onClick={saveEntry}>Guardar</button>
             </div>
           </section>
 

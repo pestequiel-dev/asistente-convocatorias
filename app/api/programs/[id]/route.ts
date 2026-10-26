@@ -43,6 +43,13 @@ export async function PATCH(req: Request, ctx: Ctx) {
   sets.push("updated_at = ?");
   values.push(nowIso(), Number(id));
 
+  if (typeof body.notes === "string" && body.notes.trim()) {
+    const prev = db.prepare("SELECT notes FROM programs WHERE id = ?").get(Number(id)) as { notes: string | null } | undefined;
+    if ((prev?.notes ?? "") !== body.notes) {
+      logEvent(Number(id), "nota", body.notes.trim().slice(0, 400));
+    }
+  }
+
   if (body.pipeline_status) {
     const before = db.prepare("SELECT pipeline_status FROM programs WHERE id = ?").get(Number(id)) as { pipeline_status: string } | undefined;
     if (before && before.pipeline_status !== body.pipeline_status) {
