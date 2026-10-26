@@ -1,7 +1,7 @@
 import { getDb, getSetting, logEvent, nowIso } from "./db";
 import { crawlSite, resolveStartUrl, type CrawledPage } from "./crawler";
 import { classify, fetchPreview } from "./classify";
-import { extract, criteriaFromForm, type ExtractionDate } from "./extract";
+import { extract, criteriaFromCorrection, criteriaFromForm, type ExtractionDate } from "./extract";
 import { extractFormQuestions } from "./form-questions";
 import { extractCompetitor, extractEvent, extractInvestor, scoreEventRelevance, scoreInvestor } from "./extract-kind";
 import { applyOverrides, computeScore, matchHeuristic, matchWithLlm } from "./eligibility";
@@ -567,6 +567,29 @@ function syncPipelineStatus(db: ReturnType<typeof getDb>, id: number, verdict: s
 export async function reevaluateProgram(id: number) {
   const db = getDb();
   const profile = db.prepare("SELECT * FROM profile WHERE id = 1").get() as Profile;
+
+  // Si la corrección afirma una condición que no está entre los criterios,
+  // hay que crearla: si no, no hay nada que pueda fallar.
+  const programRow = db.prepare("SELECT correction FROM programs WHERE id = ?").get(id) as
+    | { correction: string | null }
+    | undefined;
+  if (programRow?.correction) {
+    const existing = db.prepare("SELECT text FROM criteria WHERE program_id = ?").all(id) as { text: string }[];
+    const norm = (t: string) => t.toLowerCase().replace(/[^a-z0-9áéíóúñ ]/g, " ").replace(/\s+/g, " ").trim();
+    const derived = await criteriaFromCorrection(programRow.correction).catch(() => []);
+    const insert = db.prepare(
+      `INSERT INTO criteria (program_id, text, category, source_url, quote, verdict, reason, confidence)
+       VALUES (?, ?, ?, NULL, ?, 'falta_dato', NULL, 0.9)`
+    );
+    let added = 0;
+    for (const d of derived) {
+      if (existing.some((e) => norm(e.text) === norm(d.text))) continue;
+      insert.run(id, d.text, d.category, d.quote);
+      added++;
+    }
+    if (added) log(id, `corrección: ${added} requisito(s) nuevo(s)`);
+  }
+
   const stored = db.prepare("SELECT * FROM criteria WHERE program_id = ?").all(id) as Criterion[];
   if (!stored.length) return { ok: false, error: "No hay criterios para re-evaluar" };
 

@@ -539,3 +539,31 @@ ${(ctx.formText ?? "").slice(0, 1200)}`,
       confidence: 0.6,
     }));
 }
+
+/** A user correction can state a requirement the extraction never captured. */
+export async function criteriaFromCorrection(
+  correction: string
+): Promise<{ text: string; category: string; quote: string; confidence: number }[]> {
+  if (!correction.trim()) return [];
+  const { json } = await chatJson<{ criteria: { text: string; category: string }[] }>(
+    `Una persona corrige el análisis de una convocatoria. Convertí esa corrección en requisitos verificables.
+Devolvés JSON {"criteria":[{"text":"...","category":"..."}]}.
+Reglas:
+- Solo si la corrección AFIRMA una condición de elegibilidad (país, residencia, etapa, sector, legal, idioma). Si es una aclaración sin condición, devolvé [].
+- Texto en tercera persona, corto y verificable contra el perfil de una startup.
+- Categorías: producto, traccion, equipo, legal, geografia, idioma, etapa, sector, otro.`,
+    `Corrección del fundador: "${correction.slice(0, 800)}"`,
+    { maxTokens: 600, temperature: 0.1 }
+  );
+  return (json.criteria ?? [])
+    .filter((c) => c.text && c.text.length > 8)
+    .slice(0, 3)
+    .map((c) => ({
+      text: c.text.slice(0, 200),
+      category: ["producto", "traccion", "equipo", "legal", "geografia", "idioma", "etapa", "sector", "otro"].includes(c.category)
+        ? c.category
+        : "otro",
+      quote: correction.slice(0, 200),
+      confidence: 0.9,
+    }));
+}
