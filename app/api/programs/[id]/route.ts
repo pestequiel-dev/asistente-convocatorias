@@ -43,6 +43,11 @@ export async function PATCH(req: Request, ctx: Ctx) {
   sets.push("updated_at = ?");
   values.push(nowIso(), Number(id));
 
+  if (typeof body.kind === "string") {
+    const prev = db.prepare("SELECT kind FROM programs WHERE id = ?").get(Number(id)) as { kind: string } | undefined;
+    logEvent(Number(id), "tipo", prev && prev.kind !== body.kind ? `Tipo: ${prev.kind} → ${body.kind}` : `Tipo confirmado: ${body.kind}`);
+  }
+
   if (typeof body.notes === "string" && body.notes.trim()) {
     const prev = db.prepare("SELECT notes FROM programs WHERE id = ?").get(Number(id)) as { notes: string | null } | undefined;
     if ((prev?.notes ?? "") !== body.notes) {

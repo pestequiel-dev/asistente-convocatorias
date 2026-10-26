@@ -228,9 +228,7 @@ export function ProgramDetail({ id }: { id: number }) {
               </span>
             )}
             {!p.kind_confirmed && (
-              <button className="badge badge-amber" style={{ cursor: "pointer", border: 0 }} onClick={() => patch({ kind: p!.kind })} title="Dar por bueno el tipo detectado">
-                sin confirmar · confirmar
-              </button>
+              <span className="badge badge-amber">sin confirmar</span>
             )}
           </div>
           <h1 style={{ fontSize: "calc(23px * var(--fs))", lineHeight: 1.25 }}>{p.title || p.url}</h1>
@@ -689,21 +687,20 @@ export function ProgramDetail({ id }: { id: number }) {
                   ))}
                 </select>
               </div>
-            ) : (
-              <div className="field" style={{ marginBottom: 12 }}>
-                <label className="label">Tipo</label>
-                <select
-                  className="select"
-                  value={kind}
-                  onChange={(e) => patch({ kind: e.target.value })}
-                >
-                  {Object.entries(KIND_META).map(([k, v]) => (
-                    <option key={k} value={k}>{v.label}</option>
-                  ))}
-                </select>
-                <span className="hint">Cambia la categoría. Para volver a extraer, usá “Re-analizar”.</span>
-              </div>
-            )}
+            ) : null}
+            <div className="field" style={{ marginBottom: 12 }}>
+              <label className="label">Tipo</label>
+              <select
+                className="select"
+                value={p.kind}
+                onChange={(e) => patch({ kind: e.target.value })}
+              >
+                {Object.entries(KIND_META).map(([k, v]) => (
+                  <option key={k} value={k}>{v.label}</option>
+                ))}
+              </select>
+              <span className="hint">Elegirlo también lo da por confirmado.</span>
+            </div>
             <div className="field" style={{ marginBottom: 12 }}>
               <label className="label" htmlFor="notas-gestion">Notas</label>
               <textarea
