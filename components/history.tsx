@@ -16,7 +16,7 @@ const LABEL: Record<string, string> = {
   nota: "Nota",
 };
 
-export function HistoryCard({ programId }: { programId: number }) {
+export function HistoryCard({ programId, version = 0 }: { programId: number; version?: number }) {
   const [events, setEvents] = useState<Ev[]>([]);
 
   const load = useCallback(async () => {
@@ -27,7 +27,7 @@ export function HistoryCard({ programId }: { programId: number }) {
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, version]);
 
   return (
     <section className="card">

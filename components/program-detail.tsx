@@ -107,6 +107,8 @@ export function ProgramDetail({ id }: { id: number }) {
     return c;
   }, [criteria]);
 
+  const [refreshKey, setRefreshKey] = useState(0);
+
   async function patch(body: Record<string, unknown>) {
     await fetch(`/api/programs/${id}`, {
       method: "PATCH",
@@ -114,12 +116,14 @@ export function ProgramDetail({ id }: { id: number }) {
       body: JSON.stringify(body),
     });
     await load();
+    setRefreshKey((v) => v + 1);
   }
 
   async function reanalyze(kindHint?: string) {
     setBusy(true);
     await fetch(`/api/programs/${id}${kindHint ? `?kind=${kindHint}` : ""}`, { method: "POST" });
     await load();
+    setRefreshKey((v) => v + 1);
     setBusy(false);
   }
 
@@ -127,6 +131,7 @@ export function ProgramDetail({ id }: { id: number }) {
     setBusy(true);
     await fetch(`/api/programs/${id}?action=reevaluate`, { method: "POST" });
     await load();
+    setRefreshKey((v) => v + 1);
     setBusy(false);
   }
 
@@ -443,7 +448,7 @@ export function ProgramDetail({ id }: { id: number }) {
           {isInv && <InvestorBody program={p} />}
           {isRef && <ReferenceBody program={p} />}
 
-          <HistoryCard programId={p.id} />
+          <HistoryCard programId={p.id} version={refreshKey} />
 
           {(isOpp || isInv) && p.applies_url && (
             <DraftPanel

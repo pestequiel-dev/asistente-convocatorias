@@ -1,0 +1,18 @@
+import { chromium } from "playwright";
+const b = await chromium.launch({ headless: true, executablePath: "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" });
+const p = await b.newPage({ viewport: { width: 1440, height: 1200 } });
+const errors = [];
+p.on("pageerror", (e) => errors.push(e.message.slice(0, 100)));
+await p.goto("http://127.0.0.1:3100/programa/13", { waitUntil: "networkidle" });
+await p.waitForTimeout(1200);
+const count = () => p.evaluate(() => [...document.querySelectorAll(".card")].find((c) => c.innerText.includes("Historial"))?.querySelectorAll("li").length ?? -1);
+const before = await count();
+await p.fill("#notas-gestion", "Llamada con el fondo el 26/10.");
+await p.getByRole("button", { name: /^Guardar$/ }).click();
+await p.waitForTimeout(2000);
+const afterNote = await count();
+await p.selectOption("select.select >> nth=0", "applied");
+await p.waitForTimeout(2000);
+const afterStatus = await count();
+console.log(JSON.stringify({ before, afterNote, afterStatus }), "errors:", errors.length ? errors : "none");
+await b.close();
