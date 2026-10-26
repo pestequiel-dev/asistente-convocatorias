@@ -88,7 +88,10 @@ export function geoOverride(
   if (included) return null;
 
   // Only when the wording is about who may apply.
-  const eligibilityish = /(podr[aá]n|pueden|postular|aplica|dirigid|exclusiv|solo|abierto|abierta|empresas|startups|proyectos|particip)/i.test(text);
+  const eligibilityish =
+    /(podr[aá]n|pueden|postular|aplica|dirigid|exclusiv|solo|abierto|abierta|empresas|startups?|proyectos|particip|establecid|radicad|sede|operaciones en|domicilio)/i.test(
+      text
+    );
   if (!eligibilityish) return null;
 
   return {
@@ -303,7 +306,9 @@ export async function matchWithLlm(
     const { json } = await chatJson<{ results: { index: number; verdict: string; reason: string }[] }>(
       `Sos un analista que evalúa si una startup cumple los requisitos de una convocatoria.
 Te doy el perfil REAL de la startup y una lista de criterios extraídos de las bases.
-Si el usuario aportó una CORRECCIÓN, tomala como verdad por encima de cualquier interpretación tuya de las bases (él leyó el sitio). Usala para corregir los veredictos, no la ignores.
+Si el usuario aportó una CORRECCIÓN, tomala como verdad sobre CÓMO SON LAS BASES, no como dato de la startup.
+- Si la corrección describe el programa ("es para Chile", "solo instituciones"), usala para interpretar el requisito y evaluar si la startup lo cumple. NO la uses como prueba de que la startup cumple.
+- Si la corrección describe la startup ("ya facturamos", "tenemos empresa"), entonces sí es un dato del perfil.
 Para cada criterio devolvés un veredicto:
 - "cumple": el perfil satisface el requisito de forma clara.
 - "no_cumple": el perfil contradice el requisito.
