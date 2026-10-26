@@ -140,7 +140,8 @@ export function ProgramDetail({ id }: { id: number }) {
   async function saveEntry() {
     setBusy(true);
     try {
-      await patch({ notes });
+      // Guardar también da por confirmado el tipo que muestra el selector.
+      await patch({ notes, kind: p?.kind });
       if (reverify && notes.trim() && (p?.kind === "convocatoria" || p?.kind === "inversor")) {
         await fetch(`/api/programs/${id}/correction`, {
           method: "POST",

@@ -44,8 +44,14 @@ export async function PATCH(req: Request, ctx: Ctx) {
   values.push(nowIso(), Number(id));
 
   if (typeof body.kind === "string") {
-    const prev = db.prepare("SELECT kind FROM programs WHERE id = ?").get(Number(id)) as { kind: string } | undefined;
-    logEvent(Number(id), "tipo", prev && prev.kind !== body.kind ? `Tipo: ${prev.kind} → ${body.kind}` : `Tipo confirmado: ${body.kind}`);
+    const prev = db.prepare("SELECT kind, kind_confirmed FROM programs WHERE id = ?").get(Number(id)) as
+      | { kind: string; kind_confirmed: number }
+      | undefined;
+    if (prev && prev.kind !== body.kind) {
+      logEvent(Number(id), "tipo", `Tipo: ${prev.kind} → ${body.kind}`);
+    } else if (prev && !prev.kind_confirmed) {
+      logEvent(Number(id), "tipo", `Tipo confirmado: ${body.kind}`);
+    }
   }
 
   if (typeof body.notes === "string" && body.notes.trim()) {
