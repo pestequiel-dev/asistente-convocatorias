@@ -56,7 +56,13 @@ function docsContext(docs?: { label: string; content: string | null }[]) {
 
 export function nonRequirementReason(text: string): string | null {
   const re = /^\s*(no\s+(se\s+)?(requiere|es\s+necesario|hace\s+falta|se\s+exige|se\s+necesita|es\s+obligatorio)|no\s+hay\s+que|no\s+es\s+necesario)/i;
-  return re.test(text) ? "No es un requisito: la base aclara que no se exige." : null;
+  if (re.test(text)) return "No es un requisito: la base aclara que no se exige.";
+
+  // Procedimiento de postulación, no una condición de elegibilidad.
+  const procedural =
+    /(postulaci[oó]n|aplicaci[oó]n|inscripci[oó]n|registro).*(sitio web|p[aá]gina web|formulario|plataforma|per[ií]odo|plazo|fecha)/i;
+  if (procedural.test(text)) return "No es una condición de elegibilidad: es el procedimiento de postulación.";
+  return null;
 }
 
 const EXCLUSION = /no\s+(podr[aá]n|pueden|se\s+aceptan|se\s+admiten|participan)/i;
@@ -104,6 +110,18 @@ export function applyOverrides(
 
   const geo = p ? geoOverride(c, p) : null;
   if (geo) return geo;
+
+  // A requirement scoped to another track/category must not disqualify.
+  const trackScoped =
+    /(for the [^.]{0,45}track|para el [^.]{0,45}track|para la [^.]{0,45}track|track\s*:|categor[ií]a\s*:)/i.test(c.text) &&
+    (r.verdict === "no_cumple" || r.verdict === "falta_dato");
+  if (trackScoped) {
+    return {
+      verdict: "no_aplica",
+      reason:
+        "Requisito de un track específico (no del general). Si te presentás por ese track tenés que cumplirlo; por otro, no te bloquea.",
+    };
+  }
 
   // Without an LLM the heuristic can't interpret a free-text note: be explicit
   // instead of silently ignoring what the user wrote.
