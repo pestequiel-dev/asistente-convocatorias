@@ -21,7 +21,9 @@ function tokens(s: string) {
 }
 
 function same(a: string, b: string) {
-  return a === b || (a.length >= 4 && b.length >= 4 && (a.startsWith(b) || b.startsWith(a)));
+  // Un prefijo corto ("link") no debe arrastrar "linkedin".
+  // Prefijos de 5+: "link" (4) ya no arrastra "linkedin".
+  return a === b || (a.length >= 5 && b.length >= 5 && (a.startsWith(b) || b.startsWith(a)));
 }
 
 /** How much of the candidate (a question) is covered by what the field says. */
@@ -127,7 +129,9 @@ export async function fillForm(
       }
 
       let best: { value: FillValue; s: number } | null = null;
-      for (const cand of candidates) {
+      // Solo las etiquetas más específicas: un ancestro compartido puede
+      // contener el título de otro campo y robarle el valor.
+      for (const cand of candidates.slice(0, 2)) {
         const lt = tokens(cand);
         if (!lt.length) continue;
         const candNorm = cand.toLowerCase();
@@ -141,6 +145,12 @@ export async function fillForm(
             if (!best || s > best.s) best = { value: v, s };
           }
         }
+      }
+
+      // Un campo de GitHub no se completa con LinkedIn: no tenemos ese dato.
+      if (best && /github|gitlab/i.test(candidates[0]) && !/github|gitlab/i.test(best.value.label)) {
+        skipped.push(candidates[0].slice(0, 60));
+        continue;
       }
 
       if (!best || best.s < 0.75) {

@@ -382,7 +382,8 @@ export async function crawlSite(startUrl: string, opts: CrawlOptions = {}): Prom
               }
             }
 
-            if (isFormHost(abs)) {
+            // Form embeds (Tally, Typeform, custom form subdomains).
+            if (isFormHost(abs) || /\/(form|forms)\.|typeform\.com|tally\.so|jotform\.com|\/t\/[a-z0-9]{6,}/i.test(abs)) {
               formCandidates.add(abs);
               continue;
             }

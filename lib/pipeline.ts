@@ -396,7 +396,7 @@ function pickAction(formCandidates: string[], contactCandidates: string[], start
   const isContactPage = (u: string) => /(contact|contacto|contact-us|contáctanos|get-in-touch|hablemos)/i.test(u);
   const looksLikeForm = (u: string) =>
     !isContactPage(u) &&
-    (/airtable|typeform|forms\.|jotform|tally|google\.com\/forms/i.test(u) ||
+    (/airtable|typeform|forms?\.|jotform|tally|google\.com\/forms/i.test(u) ||
       /(apply|postul|aplica|formulario|inscri)/i.test(u));
   const apply = usable.find(looksLikeForm) ?? null;
   const contact = contactCandidates.find((u) => u !== apply && u !== startUrl && !JUNK_URL.test(u)) ?? null;

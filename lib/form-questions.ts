@@ -141,11 +141,23 @@ async function readPage(page: import("playwright").Page, depth = 0): Promise<For
     return out;
   });
 
-  const clean = questions
+  let clean = questions
     .filter((q) => !SKIP.test(q.trim()))
     .filter((q) => !/(nunca envíes contraseñas|never submit passwords|se enviará una copia|borrar formulario|google forms|formularios de google)/i.test(q))
     .filter((q) => !DATA.test(q))
     .slice(0, 20);
+
+  // A form embedded in an iframe (Tally/Typeform) can't be read from the page.
+  if (!clean.length && depth < 2) {
+    const frameSrc = await safeEval(page, () => {
+      const frames = [...document.querySelectorAll("iframe[src]")].map((f) => (f as HTMLIFrameElement).src);
+      return frames.find((u) => /(form\.|forms\.|typeform|tally|jotform|airtable|docs\.google\.com\/forms)/i.test(u)) ?? null;
+    }).catch(() => null);
+    if (frameSrc) {
+      await page.goto(frameSrc, { waitUntil: "domcontentloaded", timeout: 35_000 }).catch(() => {});
+      return readPage(page, depth + 1);
+    }
+  }
 
   // A landing page ("APLICA AQUÍ") is not the form: follow its button once.
   if (!clean.length && depth < 2) {
