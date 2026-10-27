@@ -194,6 +194,7 @@ export interface Profile {
   market_size: string;
   market_plan: string;
   traction_metrics: string;
+  dedication: string;
   legal_status: string;
   legal_structure_detail: string;
   can_invoice: string;

@@ -114,6 +114,12 @@ export function applyOverrides(
   const geo = p ? geoOverride(c, p) : null;
   if (geo) return geo;
 
+  // Ser mayor de 18 se asume: es un dato que el perfil nunca va a tener y
+  // ningún fundador de una startup constituida lo incumple.
+  if (/(18|dieciocho)\s*(años|anos)|mayor(es)? de edad|age of majority/i.test(c.text) && r.verdict === "falta_dato") {
+    return { verdict: "cumple", reason: "Se asume mayoría de edad; el perfil no indica lo contrario." };
+  }
+
   // A requirement scoped to another track/category must not disqualify.
   const trackScoped =
     /(for the [^.]{0,45}track|para el [^.]{0,45}track|para la [^.]{0,45}track|track\s*:|categor[ií]a\s*:)/i.test(c.text) &&
@@ -319,6 +325,8 @@ Para cada criterio devolvés un veredicto:
 Nunca inventes datos del perfil. Si el perfil está vacío en un campo, es "falta_dato".
 Usá los DOCUMENTOS DE CONTEXTO como fuente de verdad sobre tracción, equipo, producto y métricas de la startup; si un documento responde un criterio, no es "falta_dato".
 Si un criterio trae "NOTA DEL USUARIO", es información que el fundador aportó explícitamente: tratala como dato veraz y resolvé el veredicto con eso.
+El campo "dedication" del perfil responde cualquier requisito de tiempo completo / dedicación exclusiva.
+La edad mínima (18 años) se asume cumplida salvo que el perfil diga lo contrario.
 Importante: la startup puede operar bajo la estructura legal de un tercero (una cooperativa). Si la base exige personería jurídica propia y el perfil dice que opera bajo un tercero, el veredicto es "ambiguo" (no "cumple"): hay que confirmar si la cooperativa puede ser la solicitante.
 Devolvés SOLO JSON: {"results":[{"index":0,"verdict":"cumple|no_cumple|falta_dato|ambiguo|no_aplica","reason":"..."}]}`,
       `PERFIL:\n${JSON.stringify(p, null, 2)}\n${docsContext(docs)}\n${correction ? `CORRECCIÓN DEL USUARIO (verdad):\n${correction}\n\n` : ""}CRITERIOS:\n${criteria

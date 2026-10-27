@@ -8,7 +8,7 @@ import type { Profile } from "@/lib/types";
 type Form = Omit<Profile, "id" | "updated_at">;
 
 const EMPTY: Form = {
-  name: "", url: "", country: "", city: "", founder_name: "", founder_last: "", email: "", linkedin: "", phone: "", role: "", deck_url: "", round_details: "", market_size: "", market_plan: "", traction_metrics: "", legal_status: "", legal_structure_detail: "", can_invoice: "", founded: "", stage: "", sector: "",
+  name: "", url: "", country: "", city: "", founder_name: "", founder_last: "", email: "", linkedin: "", phone: "", role: "", deck_url: "", round_details: "", market_size: "", market_plan: "", traction_metrics: "", dedication: "", legal_status: "", legal_structure_detail: "", can_invoice: "", founded: "", stage: "", sector: "",
   description: "", team_size: null, founders: null, revenue_usd: null, customers: null,
   languages: "", tech_stack: "", has_product: "", notes: "",
 };
@@ -404,6 +404,16 @@ export default function PerfilPage() {
                 value={form.market_plan}
                 onChange={(e) => set("market_plan", e.target.value)}
               />
+            </div>
+            <div className="field">
+              <label className="label">Dedicación del equipo</label>
+              <select className="select" value={form.dedication} onChange={(e) => set("dedication", e.target.value)}>
+                <option value="">— sin definir —</option>
+                <option value="Tiempo completo">Tiempo completo</option>
+                <option value="Dedicación parcial">Dedicación parcial</option>
+                <option value="Mixta">Mixta (algunos full-time, otros no)</option>
+              </select>
+              <span className="hint">Responde los requisitos de “dedicación exclusiva / full-time” sin depender de los documentos.</span>
             </div>
             <div className="field span-2">
               <label className="label">Métricas de uso y retención</label>
