@@ -80,6 +80,14 @@ export function geoOverride(
   const text = raw.toLowerCase();
   if (EXCLUSION.test(text)) return null;
 
+  // "Puede estar ubicada fuera de EE.UU.", "no se limita a", "excepto":
+  // son permisivas, no restricciones. Que el modelo decida.
+  const permissive =
+    /(puede(n)?\s+estar\s+(ubicad|radicad|domiciliad)|fuera\s+de\s+(los\s+)?(estados\s+unidos|ee\.?uu)|no\s+es\s+necesario\s+(estar|tener\s+sede|residir)|no\s+se\s+limita|tambi[eé]n\s+pueden|excepci[oó]n|except[oa]\b)/i.test(
+      raw
+    );
+  if (permissive) return null;
+
   const named = COUNTRIES.filter((cn) => mentionsCountry(text, cn));
   if (!named.length) return null;
 
