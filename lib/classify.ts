@@ -157,6 +157,18 @@ function heuristic(url: string, pasted: string, preview: string): Classification
 
 export async function classify(input: { url: string; pasted: string; preview: string }): Promise<Classification> {
   const fallback = heuristic(input.url, input.pasted, input.preview);
+  // Sitio bloqueado por anti-bot: no hay evidencia para descartarlo.
+  const walled = input.preview.trim().length < 60 || /(just a moment|checking your browser|attention required|verify you are human)/i.test(input.preview);
+  if (walled) {
+    return {
+      ...fallback,
+      relevant: true,
+      kind: fallback.kind === "referencia" ? "referencia" : fallback.kind,
+      reason: "Sitio protegido: no pude leer el contenido. Revisalo a mano.",
+      relevance_reason: "No se pudo verificar por el bloqueo anti-bot.",
+    };
+  }
+
   if (!llmConfig()) return fallback;
 
   try {
