@@ -731,6 +731,24 @@ export function ProgramDetail({ id }: { id: number }) {
                   {busy ? <span className="spinner" /> : null} Leer y generar
                 </button>
               </div>
+              <div className="row wrap" style={{ gap: 8, marginTop: 6 }}>
+                <button
+                  className="btn btn-sm"
+                  onClick={async () => {
+                    setBusy(true);
+                    try {
+                      await fetch(`/api/programs/${id}/open-form`, { method: "POST" });
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  Abrir en navegador normal
+                </button>
+                <span className="tiny muted">
+                  Para sitios con verificación anti-bot: pasala ahí y después “Leer y generar”.
+                </span>
+              </div>
               <span className="hint">Si el sistema no encontró el formulario, pegalo acá y generá el borrador.</span>
             </div>
             <div className="field" style={{ marginBottom: 12 }}>
