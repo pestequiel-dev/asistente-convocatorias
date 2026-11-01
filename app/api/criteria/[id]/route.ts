@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { reevaluateCriterion } from "@/lib/pipeline";
-import { logEvent } from "@/lib/db";
+import { logEvent, nowIso } from "@/lib/db";
+import { computeScore } from "@/lib/eligibility";
 import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -23,8 +24,13 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
       Number(id)
     );
     logEvent(row.program_id, "dato", `Veredicto manual: ${body.verdict}`);
-    const res = await reevaluateCriterion(Number(id), "");
-    return NextResponse.json(res);
+    // El veredicto manual manda: recalculamos el score sin volver a preguntarle al modelo.
+    const all = db.prepare("SELECT verdict FROM criteria WHERE program_id = ?").all(row.program_id) as { verdict: string }[];
+    const { score, verdict } = computeScore(all.map((c) => c.verdict as never));
+    db.prepare("UPDATE programs SET eligibility_score = ?, verdict = ?, fit_score = ?, updated_at = ? WHERE id = ?").run(
+      score, verdict, score, nowIso(), row.program_id
+    );
+    return NextResponse.json({ ok: true, score, verdict });
   }
   const note = (body.note || "").trim();
   if (!note) return NextResponse.json({ error: "Escribí el dato antes de re-analizar" }, { status: 400 });
