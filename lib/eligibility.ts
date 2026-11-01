@@ -130,7 +130,7 @@ export function applyOverrides(
 
   // A requirement scoped to another track/category must not disqualify.
   const trackScoped =
-    /(para\s+(el|la)\s+[^.:]{0,50}(track|fellowship|programa|cohorte|cohort|batch|categor[ií]a|modalidad)|for the [^.:]{0,50}(track|fellowship|program|cohort|batch|category)|track\s*:|categor[ií]a\s*:)/i.test(c.text) &&
+    /(para\s+(el|la)\s+[^.:]{0,50}(track|fellowship|programa|cohorte|cohort|batch|categor[ií]a|modalidad)|((el|la|the)\s+(programa|program|track|fellowship)\s+[""']?[a-z0-9]{3,})|for the [^.:]{0,50}(track|fellowship|program|cohort|batch|category)|track\s*:|categor[ií]a\s*:)/i.test(c.text) &&
     (r.verdict === "no_cumple" || r.verdict === "falta_dato");
   if (trackScoped) {
     return {
@@ -162,7 +162,7 @@ export function matchHeuristic(c: Criterion, p: Profile): { verdict: CriterionVe
   if (geo) return geo;
 
   // A requirement scoped to a specific track/category must not disqualify globally.
-  const trackScoped = /(para\s+(el|la)\s+[^.:]{0,50}(track|fellowship|programa|cohorte|cohort|batch|categor[ií]a|modalidad)|for the [^.:]{0,50}(track|fellowship|program|cohort|batch|category)|track\s*:|categor[ií]a\s*:)/i.test(c.text);
+  const trackScoped = /(para\s+(el|la)\s+[^.:]{0,50}(track|fellowship|programa|cohorte|cohort|batch|categor[ií]a|modalidad)|((el|la|the)\s+(programa|program|track|fellowship)\s+[""']?[a-z0-9]{3,})|for the [^.:]{0,50}(track|fellowship|program|cohort|batch|category)|track\s*:|categor[ií]a\s*:)/i.test(c.text);
   if (trackScoped) {
     return {
       verdict: "no_aplica",

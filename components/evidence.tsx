@@ -151,6 +151,37 @@ export function EvidenceSection({
 
                   {c.reason && <div className="small muted" style={{ marginTop: 5 }}>{c.reason}</div>}
 
+                  {c.verdict === "no_cumple" && (
+                    <div className="row wrap" style={{ gap: 8, marginTop: 8 }}>
+                      <button
+                        className="btn btn-sm"
+                        onClick={async () => {
+                          await fetch(`/api/criteria/${c.id}`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ verdict: "no_aplica" }),
+                          });
+                          await onChanged?.();
+                        }}
+                      >
+                        No aplica (es de otro track)
+                      </button>
+                      <button
+                        className="btn btn-sm"
+                        onClick={async () => {
+                          await fetch(`/api/criteria/${c.id}`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ verdict: "cumple" }),
+                          });
+                          await onChanged?.();
+                        }}
+                      >
+                        Lo cumplimos
+                      </button>
+                    </div>
+                  )}
+
                   {c.user_note && (
                     <div className="crit-note">
                       <strong>Tu aporte:</strong> {c.user_note}

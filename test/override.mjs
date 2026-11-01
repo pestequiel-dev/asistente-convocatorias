@@ -1,0 +1,11 @@
+import { chromium } from "playwright";
+const b = await chromium.launch({ headless: true, executablePath: "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" });
+const p = await b.newPage({ viewport: { width: 1440, height: 1300 } });
+await p.goto("http://127.0.0.1:3100/programa/382", { waitUntil: "networkidle" });
+await p.waitForTimeout(1500);
+const btn = p.getByRole("button", { name: /No aplica \(es de otro track\)/ });
+const has = await btn.count();
+if (has) await btn.first().click();
+await p.waitForTimeout(2500);
+console.log(JSON.stringify({ hasButton: has > 0, chip: await p.evaluate(() => [...document.querySelectorAll(".page-head .badge")].map(b=>b.textContent?.trim()).find(t=>/Elegib/i.test(t||""))) }));
+await b.close();
