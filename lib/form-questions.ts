@@ -9,6 +9,7 @@ const DATA = /(ventas|revenue|monto|amount|tama[ñn]o (de )?ronda|round size|val
 export type FormReadResult =
   | { status: "ok"; questions: string[]; pageText?: string }
   | { status: "login" }
+  | { status: "blocked" }
   | { status: "empty" }
   | { status: "error"; message: string };
 
@@ -59,6 +60,11 @@ async function readPage(page: import("playwright").Page, depth = 0): Promise<For
     probe.password > 0;
 
   if (looksLikeLogin) return { status: "login" };
+
+  // Anti-bot walls (Cloudflare, F6S, etc.) block the automated browser.
+  if (/(checking to see if you.{0,10}re a bot|verify you are human|verify you're human|just a moment|attention required|access denied|unusual traffic|ray id)/i.test(probe.text)) {
+    return { status: "blocked" };
+  }
 
   const questions = await safeEval(page, () => {
     const out: string[] = [];

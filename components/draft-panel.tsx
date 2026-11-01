@@ -273,6 +273,44 @@ export function DraftPanel({
               </div>
             )}
 
+            {source === "blocked" && (
+              <div className="banner banner-warn" style={{ marginBottom: 14 }}>
+                <AlertTriangle size={15} style={{ flex: "none", marginTop: 2 }} />
+                <div>
+                  <strong>El sitio bloquea el acceso automático</strong> (verificación anti-bot). Las respuestas de
+                  abajo son genéricas.
+                  <div className="row wrap" style={{ gap: 8, marginTop: 8 }}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-primary"
+                      disabled={loginBusy}
+                      onClick={async () => {
+                        setLoginBusy(true);
+                        try {
+                          const res = await fetch(`/api/programs/${programId}/open-form`, { method: "POST" });
+                          const data = await res.json();
+                          if (!res.ok) throw new Error(data.error || "No se pudo abrir");
+                          setLoginMsg(
+                            "Se abrió una ventana normal. Pasá la verificación (o iniciá sesión) y volvé a tocar Regenerar."
+                          );
+                        } catch (e) {
+                          setLoginMsg((e as Error).message);
+                        } finally {
+                          setLoginBusy(false);
+                        }
+                      }}
+                    >
+                      <MonitorUp size={13} /> Abrir en navegador normal
+                    </button>
+                    <button type="button" className="btn btn-sm" onClick={generate} disabled={busy}>
+                      <RefreshCw size={13} /> Regenerar
+                    </button>
+                  </div>
+                  {loginMsg && <div className="small" style={{ marginTop: 8 }}>{loginMsg}</div>}
+                </div>
+              </div>
+            )}
+
             {source === "login" && (
               <div className="banner banner-warn" style={{ marginBottom: 14 }}>
                 <AlertTriangle size={15} style={{ flex: "none", marginTop: 2 }} />
@@ -311,7 +349,7 @@ export function DraftPanel({
               </div>
             )}
 
-            {answers && (source === "login" || source === "generic") && (
+            {answers && (source === "login" || source === "generic" || source === "blocked") && (
               <div style={{ marginBottom: 14 }}>
                 <button type="button" className="btn btn-sm" onClick={() => setShowPaste((v) => !v)}>
                   {showPaste ? "Cerrar" : "Pegar las preguntas del formulario a mano"}

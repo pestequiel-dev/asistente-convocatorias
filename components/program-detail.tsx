@@ -57,6 +57,7 @@ export function ProgramDetail({ id }: { id: number }) {
   const [reverify, setReverify] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
   const [discardReason, setDiscardReason] = useState("");
+  const [formUrl, setFormUrl] = useState("");
   const [notesSaved, setNotesSaved] = useState(false);
   const [slow, setSlow] = useState(false);
   const [altUrl, setAltUrl] = useState("");
@@ -70,6 +71,7 @@ export function ProgramDetail({ id }: { id: number }) {
     const json = (await res.json()) as Data;
     setData(json);
     setNotes((prev) => prev || json.program.notes || "");
+    setFormUrl((prev) => prev || json.program.applies_url || "");
   }, [id]);
 
   useEffect(() => {
@@ -698,6 +700,26 @@ export function ProgramDetail({ id }: { id: number }) {
                 </select>
               </div>
             ) : null}
+            <div className="field" style={{ marginBottom: 12 }}>
+              <label className="label" htmlFor="form-url">Formulario</label>
+              <div className="row" style={{ gap: 8 }}>
+                <input
+                  id="form-url"
+                  className="input"
+                  placeholder="https://…"
+                  value={formUrl}
+                  onChange={(e) => setFormUrl(e.target.value)}
+                />
+                <button
+                  className="btn btn-sm"
+                  disabled={busy || !formUrl.trim()}
+                  onClick={() => patch({ applies_url: formUrl.trim() })}
+                >
+                  Guardar
+                </button>
+              </div>
+              <span className="hint">Si el sistema no encontró el formulario, pegalo acá y generá el borrador.</span>
+            </div>
             <div className="field" style={{ marginBottom: 12 }}>
               <label className="label">Tipo</label>
               <select

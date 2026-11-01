@@ -24,13 +24,13 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const db = getDb();
 
-  const allowed = ["pipeline_status", "notes", "priority", "title", "closing_at", "kind", "url"] as const;
+  const allowed = ["pipeline_status", "notes", "priority", "title", "closing_at", "kind", "url", "applies_url"] as const;
   const sets: string[] = [];
   const values: unknown[] = [];
   for (const key of allowed) {
-    if (key === "url" && key in body) {
+    if ((key === "url" || key === "applies_url") && key in body) {
       const v = String(body[key] ?? "").trim();
-      if (!/^https?:\/\//i.test(v)) return NextResponse.json({ error: "La URL debe empezar con http" }, { status: 400 });
+      if (v && !/^https?:\/\//i.test(v)) return NextResponse.json({ error: "La URL debe empezar con http" }, { status: 400 });
     }
     if (key in body) {
       sets.push(`${key} = ?`);

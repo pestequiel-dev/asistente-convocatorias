@@ -74,7 +74,7 @@ export async function POST(req: Request, ctx: Ctx) {
     // Read the real form first, so the draft answers the questions that are
     // actually asked instead of a generic template.
     let formQuestions: string[] = [];
-    let source: "form" | "generic" | "login" = "generic";
+    let source: "form" | "generic" | "login" | "blocked" = "generic";
     const formUrl = program.applies_url || program.contact_url;
 
     if (manual.length) {
@@ -90,6 +90,8 @@ export async function POST(req: Request, ctx: Ctx) {
         source = "form";
       } else if (read?.status === "login") {
         source = "login";
+      } else if (read?.status === "blocked") {
+        source = "blocked";
       }
     }
 
