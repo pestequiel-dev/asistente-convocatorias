@@ -372,7 +372,7 @@ async function saveOpportunity(
 
 /* ---------------------------------- evento -------------------------------- */
 
-const JUNK_URL = /(recaptcha|hcaptcha|turnstile|gstatic|googleapis|doubleclick|googletagmanager|google-analytics|facebook\.com\/tr|hotjar|youtube\.com\/embed)/i;
+const JUNK_URL = /(recaptcha|hcaptcha|turnstile|gstatic|googleapis|doubleclick|googletagmanager|google-analytics|facebook\.com\/tr|hotjar|youtube\.com\/embed|accounts\.youtube\.com|checkconnection)/i;
 
 /** The LLM often skips the footer address; emails are easy to find deterministically. */
 function findEmail(pages: CrawledPage[]): string | null {

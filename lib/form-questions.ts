@@ -1,7 +1,7 @@
 /** Opens an application form and reads its actual questions, in order. */
 import { cdpPort, isCdpUp, profileDirFor } from "./cdp";
 
-const SKIP = /^(first name|last name|full name|name|e-?mails?|age|phone|mobile|city|country|company|organization|organisation|website|url|linkedin|twitter|github|portfolio|orgs?\b|schools?\b|the email|drag ?& ?drop|upload|resume|cv\b|how did you hear)/i;
+const SKIP = /^(first name|last name|full name|name|e-?mails?|age|phone|mobile|city|country|company|organization|organisation|website|url|linkedin|portfolio|orgs?\b|schools?\b|the email|drag ?& ?drop|upload|resume|cv\b|how did you hear)/i;
 
 // Factual fields that belong to the profile, not to an essay answer.
 const DATA = /(ventas|revenue|monto|amount|tama[ñn]o (de )?ronda|round size|valorizaci|valuation|fecha|date|capital|cantidad de|number of|whatsapp|tel[eé]fono|pa[ií]s( origen)?|origen startup|sitio web|website|nombre de tu startup|founders?|mail|e-?mail)/i;
@@ -150,6 +150,7 @@ async function readPage(page: import("playwright").Page, depth = 0): Promise<For
   let clean = questions
     .filter((q) => !SKIP.test(q.trim()))
     .filter((q) => !/(nunca envíes contraseñas|never submit passwords|se enviará una copia|borrar formulario|google forms|formularios de google)/i.test(q))
+    .filter((q) => !/(currently used|maximum of \d+ characters|do not fill|honeypot|leave this field)/i.test(q))
     .filter((q) => !DATA.test(q))
     .slice(0, 20);
 

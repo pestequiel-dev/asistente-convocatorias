@@ -456,6 +456,7 @@ export function ProgramDetail({ id }: { id: number }) {
 
           {(isOpp || isInv) && p.applies_url && (
             <DraftPanel
+              key={refreshKey}
               programId={p.id}
               appliesUrl={p.applies_url}
               contactUrl={p.contact_url}
@@ -713,9 +714,21 @@ export function ProgramDetail({ id }: { id: number }) {
                 <button
                   className="btn btn-sm"
                   disabled={busy || !formUrl.trim()}
-                  onClick={() => patch({ applies_url: formUrl.trim() })}
+                  onClick={async () => {
+                    setBusy(true);
+                    try {
+                      await patch({ applies_url: formUrl.trim() });
+                      // Leer el formulario y resolver sus preguntas de una.
+                      await fetch(`/api/programs/${id}/draft`, { method: "POST" });
+                      // Remonta el panel: así toma el borrador recién generado.
+                      setRefreshKey((v) => v + 1);
+                      await load();
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
                 >
-                  Guardar
+                  {busy ? <span className="spinner" /> : null} Leer y generar
                 </button>
               </div>
               <span className="hint">Si el sistema no encontró el formulario, pegalo acá y generá el borrador.</span>

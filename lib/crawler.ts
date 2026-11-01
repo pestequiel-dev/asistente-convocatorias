@@ -124,7 +124,7 @@ function registrable(h: string) {
   return parts.slice(-2).join(".");
 }
 
-const JUNK = /(recaptcha|hcaptcha|turnstile|gstatic|googleapis|doubleclick|googletagmanager|google-analytics|gtag\/js|facebook\.com\/tr|hotjar|segment\.io|intercom|drift\.com|cookiebot|onetrust|youtube\.com\/embed|maps\.google|fonts\.)/i;
+const JUNK = /(recaptcha|hcaptcha|turnstile|gstatic|googleapis|doubleclick|googletagmanager|google-analytics|gtag\/js|facebook\.com\/tr|hotjar|segment\.io|intercom|drift\.com|cookiebot|onetrust|youtube\.com\/embed|accounts\.youtube\.com|checkconnection|maps\.google|fonts\.)/i;
 
 function isJunk(u: string) {
   return JUNK.test(u);
