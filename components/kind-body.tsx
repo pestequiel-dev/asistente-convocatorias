@@ -7,6 +7,7 @@ import { fmtDate } from "./format";
 
 export const KIND_META: Record<string, { label: string; tone: string; icon: string }> = {
   convocatoria: { label: "Convocatoria", tone: "teal", icon: "◆" },
+  aceleradora: { label: "Aceleradora", tone: "teal", icon: "▲" },
   evento: { label: "Evento", tone: "blue", icon: "◈" },
   competidor: { label: "Competidor", tone: "amber", icon: "◉" },
   inversor: { label: "Inversor", tone: "blue", icon: "◎" },

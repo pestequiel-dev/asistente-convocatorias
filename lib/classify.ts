@@ -47,6 +47,10 @@ export async function fetchPreview(url: string): Promise<Preview> {
 }
 
 const SIGNALS: Record<Exclude<Kind, "referencia">, RegExp[]> = {
+  aceleradora: [
+    /accelerator|aceleradora|incubadora|incubator/i, /\bcohorte\b|\bcohort\b|\bbatch\b/i,
+    /demo day|mentor(es|ía)?\b|mentorship/i, /programa de aceleraci/i,
+  ],
   convocatoria: [
     /bases\s*(y|e)\s*condiciones/i, /\bconvocatoria/i, /postulaci[oó]n|postular/i,
     /elegibilidad|elegibles/i, /\bpremio\b|\bpremios\b/i, /aceleradora|accelerator/i,
@@ -86,7 +90,8 @@ export interface Classification {
 }
 
 const KIND_LABEL: Record<Kind, string> = {
-  convocatoria: "convocatoria / premio / fondo / aceleradora",
+  convocatoria: "convocatoria / premio / fondo",
+  aceleradora: "aceleradora o incubadora (programa con mentoría; puede o no invertir)",
   evento: "evento (congreso, feria, webinar, hackathon)",
   competidor: "competidor (producto o servicio que compite con Mehmiro)",
   inversor: "inversor (fondo de VC, ángel o aceleradora con capital)",
@@ -100,8 +105,8 @@ const BUSINESS = /(edtech|educaci[oó]n|educativ|escuela|colegio|docente|univers
 
 function heuristic(url: string, pasted: string, preview: string): Classification {
   const corpus = `${pasted}\n${preview}`;
-  const scores: Record<Kind, number> = { convocatoria: 0, evento: 0, competidor: 0, inversor: 0, referencia: 0 };
-  const hits: Record<Kind, string[]> = { convocatoria: [], evento: [], competidor: [], inversor: [], referencia: [] };
+  const scores: Record<Kind, number> = { convocatoria: 0, aceleradora: 0, evento: 0, competidor: 0, inversor: 0, referencia: 0 };
+  const hits: Record<Kind, string[]> = { convocatoria: [], aceleradora: [], evento: [], competidor: [], inversor: [], referencia: [] };
 
   for (const [kind, res] of Object.entries(SIGNALS) as [Exclude<Kind, "referencia">, RegExp[]][]) {
     for (const re of res) {
@@ -182,6 +187,7 @@ export async function classify(input: { url: string; pasted: string; preview: st
       `Clasificás links que un emprendedor guarda desde LinkedIn/Instagram/web. Devolvés SOLO JSON.
 Categorías:
 - "convocatoria": llamados a postular con beneficios (aceleradora, premio, fondo, concurso, beca, grant). Señales: bases y condiciones, requisitos de elegibilidad, formulario de postulación, fecha de cierre.
+- "aceleradora": programa de aceleración/incubación con mentoría, red o capital (aunque no invierta). Señales: cohorte, batch, demo day, mentores, programa de aceleración.
 - "evento": encuentro para asistir (congreso, feria, webinar, jornada, hackathon, meetup). Señales: fecha del evento, sede, entradas, agenda, disertantes, call for speakers.
 - "competidor": producto o servicio que compite con la startup (evaluación formativa con IA, edtech para docentes/escuelas). Señales: planes y precios, demo, funcionalidades, clientes.
 - "inversor": fondo de VC, ángel o aceleradora con capital que podría invertir en la startup. Señales: portfolio, tesis, ticket, etapas, geografías, "invertimos en".
@@ -203,7 +209,7 @@ PREVIEW DEL SITIO:
 ${input.preview.slice(0, 3000) || "(no se pudo leer)"}`,
       { maxTokens: 300 }
     );
-    const kind = (["convocatoria", "evento", "competidor", "inversor", "referencia"] as const).includes(json.kind as Kind)
+    const kind = (["convocatoria", "aceleradora", "evento", "competidor", "inversor", "referencia"] as const).includes(json.kind as Kind)
       ? (json.kind as Kind)
       : fallback.kind;
     // A model that reads "Grant Opportunity Available" and answers "referencia"

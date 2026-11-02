@@ -5,7 +5,7 @@ export type ProgramStatus =
   | "ready"
   | "error";
 
-export type Kind = "convocatoria" | "evento" | "competidor" | "inversor" | "referencia";
+export type Kind = "convocatoria" | "aceleradora" | "evento" | "competidor" | "inversor" | "referencia";
 
 export type PipelineStatus =
   | "idea"

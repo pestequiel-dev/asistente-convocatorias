@@ -16,13 +16,14 @@ type Props = { programs: Program[]; profileName: string; hasKey: boolean; mode?:
 const TABS: { id: Kind | "all"; label: string }[] = [
   { id: "all", label: "Todas" },
   { id: "convocatoria", label: "Convocatorias" },
+  { id: "aceleradora", label: "Aceleradoras" },
   { id: "evento", label: "Eventos" },
   { id: "competidor", label: "Competidores" },
   { id: "inversor", label: "Inversores" },
   { id: "referencia", label: "Referencias" },
 ];
 
-const KINDS: Kind[] = ["convocatoria", "evento", "competidor", "inversor", "referencia"];
+const KINDS: Kind[] = ["convocatoria", "aceleradora", "evento", "competidor", "inversor", "referencia"];
 
 function isAnalyzing(p: Program) {
   return p.status === "queued" || p.status === "crawling" || p.status === "extracting";

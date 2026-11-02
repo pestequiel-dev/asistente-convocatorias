@@ -126,7 +126,7 @@ export async function analyzeProgram(
       }
     }
 
-    const isOpportunity = kind === "convocatoria";
+    const isOpportunity = kind === "convocatoria" || kind === "aceleradora";
 
     const insertSource = db.prepare(
       `INSERT INTO sources (program_id, url, title, kind, depth, status, hash, text, fetched_at)
@@ -220,7 +220,7 @@ export async function analyzeProgram(
     }
 
     logEvent(id, "analisis", `Analizado como ${kind} (${Math.round(cls.confidence * 100)}%)`);
-    if (kind === "convocatoria") {
+    if (kind === "convocatoria" || kind === "aceleradora") {
       await saveOpportunity(id, profile, crawled.pages, crawled.formCandidates, crawled.contactCandidates, crawled.startUrl);
     } else if (kind === "evento") {
       await saveEvent(id, profile, crawled.pages, crawled.startUrl, crawled.formCandidates, crawled.contactCandidates);
