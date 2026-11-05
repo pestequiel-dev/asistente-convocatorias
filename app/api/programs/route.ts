@@ -45,7 +45,20 @@ export async function POST(req: Request) {
   } | null = null;
   if (!force) {
     try {
+      const db0 = getDb();
       const { start } = resolveStartUrl(url, text);
+
+      // Misma URL (con o sin barra final, con o sin query) ya cargada.
+      const norm = (u: string) => u.toLowerCase().replace(/[?#].*$/, "").replace(/\/+$/, "").replace(/^https?:\/\//, "").replace(/^www\./, "");
+      const existing = db0.prepare("SELECT id, title, url FROM programs").all() as { id: number; title: string | null; url: string }[];
+      const dup = existing.find((p) => norm(p.url) === norm(start));
+      if (dup) {
+        return NextResponse.json(
+          { error: `Ese link ya está cargado: “${dup.title ?? dup.url}” (#${dup.id}).`, id: dup.id, duplicate: true },
+          { status: 409 }
+        );
+      }
+
       const preview = await fetchPreview(start);
       const cls = await classify({ url: start, pasted: text, preview: preview.text });
       // Being a "referencia" is fine (a VC fund, an article about edtech). What we
