@@ -2,78 +2,77 @@
 
 [![CI](https://github.com/pestequiel-dev/asistente-convocatorias/actions/workflows/ci.yml/badge.svg)](https://github.com/pestequiel-dev/asistente-convocatorias/actions/workflows/ci.yml)
 
-Panel local para gestionar convocatorias, aceleradoras y premios. Pegás un link (y opcionalmente el texto del
-posteo de LinkedIn/Instagram) y el sistema:
+**English** · [Español](README.es.md)
 
-1. rastrea el sitio con un navegador real,
-2. encuentra las **bases y condiciones**, los requisitos y el **formulario**,
-3. extrae todo con **citas textuales y URLs**,
-4. compara los requisitos contra el perfil del proyecto,
-5. detecta la **fecha de cierre** y muestra el panel.
+A local dashboard to manage grants, accelerators and startup awards. You paste a link (and optionally the text of
+the LinkedIn/Instagram post) and the system:
 
-> **English summary.** A local, single-user dashboard for founders who apply to many grants, accelerators and
-> awards. You paste a link; it crawls the site with a real browser, extracts requirements, deadlines and forms
-> with verbatim quotes, and scores your profile against each eligibility criterion, so you know where you stand
-> before spending an evening on an application. Built with Next.js 15, React 19, TypeScript, SQLite and
-> Playwright. Optional DeepSeek API for extraction; without a key it falls back to heuristics. Run with
-> `npm install && npm run dev` and open http://localhost:3100.
+1. crawls the site with a real browser,
+2. finds the **terms and conditions**, the requirements and the **application form**,
+3. extracts everything with **verbatim quotes and URLs**,
+4. compares the requirements against the project profile,
+5. detects the **closing date** and renders the dashboard.
+
+The UI is in Spanish (Rioplatense) on purpose: the target users are founders applying to Latin American
+programs. The code, the data model and this README are language-neutral, and this document is the English
+reference for the project.
 
 ---
 
-## Capturas
+## Screenshots
 
-Panel (línea de tiempo por mes):
+Timeline panel (grouped by month):
 
 ![Panel](docs/panel.png)
 
-Ficha de una convocatoria, con veredicto por criterio y cita de la fuente:
+Grant detail: per-criterion verdict with the quote from the source:
 
-![Ficha](docs/ficha.png)
+![Grant detail](docs/ficha.png)
 
-Datos de las capturas: perfil y programas de ejemplo (`Proyecto de ejemplo`), no hay datos reales.
-
----
-
-## Para quién es
-
-Para founders y equipos chicos que aplican a muchas convocatorias a la vez y pierden tiempo leyendo bases que
-después resultan no aplicar. El caso de uso es una persona (o un equipo de dos) manteniendo un pipeline de
-postulaciones: qué está abierto, qué cierra pronto, si somos elegibles y qué falta para serlo.
-
-No es multi-usuario ni SaaS: corre en tu máquina, los datos quedan en un SQLite local y nada se envía a ningún
-lado salvo el texto de las páginas al modelo que configures.
+The screenshots use a sample profile and sample programs ("Proyecto de ejemplo"); there is no real data.
 
 ---
 
-## Arrancar
+## Who it is for
+
+For founders and small teams applying to many programs at once, who lose hours reading terms that turn out not
+to apply. The use case is one person (or a team of two) keeping an application pipeline: what is open, what
+closes soon, whether we are eligible and what is missing to become eligible.
+
+It is not multi-user and not a SaaS: it runs on your machine, data stays in a local SQLite file, and nothing is
+sent anywhere except the page text to the model you configure.
+
+---
+
+## Getting started
 
 ```bash
 npm install
 npm run dev
 ```
 
-Abrí **http://localhost:3100**.
+Open **http://localhost:3100**.
 
-`npm run dev` levanta dos procesos: la web (Next.js) y el worker que procesa la cola de análisis.
+`npm run dev` starts two processes: the web app (Next.js) and the worker that drains the analysis queue.
 
-Al primer arranque se siembra un **perfil de ejemplo** ("Proyecto de ejemplo") para que el panel tenga algo con
-qué comparar. Se edita o se borra desde **Perfil del proyecto**.
+On first run a **sample profile** ("Proyecto de ejemplo") is seeded so the dashboard has something to compare
+against. Edit or delete it from **Perfil del proyecto**.
 
-### Conectar DeepSeek (recomendado)
+### Connect DeepSeek (recommended)
 
-Sin API key la app funciona igual, pero con un **modo heurístico** (regex + reglas): mucho menos preciso.
+Without an API key the app still works, but in a **heuristic mode** (regex + rules): much less accurate.
 
-1. Creá una key en https://platform.deepseek.com/api_keys
-2. Andá a **Ajustes** en la app y pegala. Queda guardada solo en `data/app.db`.
+1. Create a key at https://platform.deepseek.com/api_keys
+2. Go to **Ajustes** in the app and paste it. It is stored only in `data/app.db`.
 
-Costo aproximado: **US$ 0,01–0,05 por convocatoria** (depende de cuántas páginas y PDFs tenga el sitio).
+Approximate cost: **US$ 0.01–0.05 per program** (depends on how many pages and PDFs the site has).
 
-También podés usar variables de entorno: copiá `.env.example` a `.env.local`.
+You can also use environment variables: copy `.env.example` to `.env.local`.
 
-### Navegador
+### Browser
 
-El rastreo usa Playwright. Si no hay Chromium descargado, la app detecta automáticamente
-**Brave / Chrome / Edge** instalados en macOS. Si preferís el Chromium de Playwright:
+Crawling uses Playwright. If Chromium is not downloaded, the app automatically detects **Brave / Chrome /
+Edge** installed on macOS. If you prefer Playwright's Chromium:
 
 ```bash
 npx playwright install chromium
@@ -83,245 +82,245 @@ npx playwright install chromium
 
 ## Stack
 
-- **Next.js 15** (App Router) + **React 19** + **TypeScript**, sin framework de UI.
-- **SQLite** vía `better-sqlite3` (WAL) en `data/app.db`: programas, fuentes, criterios, fechas, perfil, ajustes.
-- **Playwright** (Chromium headless) para rastrear sitios reales; **unpdf** para leer PDFs.
-- **DeepSeek API** (opcional, formato OpenAI-compatible) para extracción, clasificación y matching; heurística
-  como fallback en todo el pipeline.
+- **Next.js 15** (App Router) + **React 19** + **TypeScript**, no UI framework.
+- **SQLite** via `better-sqlite3` (WAL) in `data/app.db`: programs, sources, criteria, dates, profile, settings.
+- **Playwright** (headless Chromium) to crawl real sites; **unpdf** to read PDFs.
+- **DeepSeek API** (optional, OpenAI-compatible) for extraction, classification and matching; heuristics as a
+  fallback across the whole pipeline.
 
 ---
 
-## Cómo funciona
+## How it works
 
 ```
-POST /api/programs (url + texto)
+POST /api/programs (url + text)
         │
-        ├─ resolveStartUrl()   si el link es de LinkedIn/Instagram, busca el link real dentro del texto pegado
+        ├─ resolveStartUrl()   if the link is from LinkedIn/Instagram, find the real link inside the pasted text
         │
-        ├─ classify()          preview por HTTP (sin navegador) + LLM → convocatoria | evento | competidor | referencia
-        │                      de acá sale cuánto se rastrea: 24 páginas, 6, 6 o 2
+        ├─ classify()          cheap HTTP preview (no browser) + LLM → grant | event | competitor | reference
+        │                      this decides how much is crawled: 24 pages, 6, 6 or 2
         │
-        ├─ crawlSite()         BFS con scoring de links, Chromium headless, PDFs vía unpdf
-        │                      guarda cada página en `sources` (hash + texto) como evidencia
+        ├─ crawlSite()         BFS with link scoring, headless Chromium, PDFs via unpdf
+        │                      stores every page in `sources` (hash + text) as evidence
         │
-        ├─ extract()           DeepSeek con response_format=json_object → schema fijo
+        ├─ extract()           DeepSeek with response_format=json_object → fixed schema
         │                      fallback: extractHeuristic()
-        │                      validateCitations() baja la confianza si una cita no existe en la fuente
+        │                      validateCitations() lowers confidence when a quote is not in the source
         │
-        ├─ matchWithLlm()      criterio por criterio contra el perfil → cumple / no_cumple / falta_dato / ambiguo
-        │  └ matchHeuristic()  reglas por categoría si no hay LLM
+        ├─ matchWithLlm()      criterion by criterion against the profile → meets / fails / missing / ambiguous
+        │  └ matchHeuristic()  per-category rules when there is no LLM
         │
-        └─ computeScore()      score 0–100 + veredicto global
+        └─ computeScore()      score 0–100 + overall verdict
 ```
 
-### Rechazo temprano
+### Early rejection
 
-Antes de crear cualquier registro se hace un chequeo barato (preview HTTP + clasificación). El clasificador
-devuelve dos cosas distintas: el **tipo** (convocatoria / evento / competidor / referencia) y la **relevancia**
-para el proyecto.
+Before creating any record, a cheap check runs (HTTP preview + classification). The classifier returns two
+separate things: the **type** (grant / event / competitor / reference) and the **relevance** to the project.
 
-Si el link **no es relevante**, se devuelve `422` con el motivo y no se crea nada ni se rastrea. Ser
-“referencia” no alcanza para rechazarlo: la home de un fondo de inversión, una nota sobre edtech o el perfil de
-un docente son contexto útil y se guardan. Lo que se descarta es una industria ajena (bebidas, retail, deportes).
+If the link **is not relevant**, a `422` with the reason is returned and nothing is created or crawled. Being a
+"reference" is not enough to reject it: an investment fund's home page, a note about edtech or a teacher's
+profile are useful context and are stored. What gets discarded is an unrelated industry (beverages, retail,
+sports).
 
-El modal ofrece “Guardar igual” para forzar el alta (manda `force: true`), y el ingreso manual desde
-“Analizar link” tiene el mismo botón.
+The modal offers "Guardar igual" to force the record (sends `force: true`), and manual entry from "Analizar
+link" has the same button.
 
-### Triage: no todo es una convocatoria
+### Triage: not everything is a grant
 
-`lib/classify.ts` decide **antes** del rastreo profundo, con un preview HTTP + el texto pegado. El costo del
-crawl es lo caro; la clasificación son centavos.
+`lib/classify.ts` decides **before** the deep crawl, using an HTTP preview and the pasted text. The crawl is the
+expensive part; classification costs cents.
 
-| Tipo | Qué se extrae | Qué pregunta responde |
+| Type | What is extracted | Question it answers |
 |---|---|---|
-| **convocatoria** | bases, criterios, formulario, cierre | ¿somos elegibles? |
-| **evento** | fecha, sede, costo, audiencia, call for speakers, stands | ¿vale la pena ir o exponer? |
-| **competidor** | posicionamiento, precios, funcionalidades, fortalezas/debilidades | ¿qué hacen y cuánto cobran? |
-| **referencia** | título + resumen | se archiva, no se analiza |
+| **grant** | terms, criteria, form, deadline | are we eligible? |
+| **event** | date, venue, cost, audience, call for speakers, booths | is it worth going or exhibiting? |
+| **competitor** | positioning, pricing, features, strengths/weaknesses | what do they do and how much do they charge? |
+| **reference** | title + summary | archived, not analyzed |
 
-Lo clasificado entra a la **bandeja de entrada** y no aparece en el panel hasta que confirmás el tipo. Si
-cambiás el tipo, se vuelve a analizar con ese tipo forzado (`?kind=`), porque el primer análisis se hizo con el
-ruteo equivocado.
+Classified items go to the **inbox** and do not appear on the dashboard until you confirm the type. If you
+change the type, it is re-analyzed with that type forced (`?kind=`), because the first analysis used the wrong
+routing.
 
-**Eventos**: además de los datos, se calcula una `relevance_score` (audiencia escolar, call for speakers,
-stands, virtualidad, país) para priorizar.
+**Events**: besides the data, a `relevance_score` is computed (school audience, call for speakers, booths,
+remote, country) to prioritize.
 
-**Competidores**: cada página se guarda con hash. Al re-analizar se calcula un diff de líneas contra el
-snapshot anterior y se guarda en `diff_summary` — sirve para detectar cambios de precio o funcionalidades.
-El corte es determinístico (sin LLM), así que no cuesta nada.
+**Competitors**: every page is stored with a hash. On re-analysis a line diff against the previous snapshot is
+computed and stored in `diff_summary` — useful to detect pricing or feature changes. The diff is deterministic
+(no LLM), so it is free.
 
-### Por qué cada dato tiene cita
+### Why every fact has a quote
 
-Un panel de gestión solo sirve si confiás en él. Por eso:
+A management dashboard is only useful if you trust it. Therefore:
 
-- cada criterio guarda `quote` (texto literal) y `source_url`;
-- si la cita no aparece en el texto de la fuente, se descarta y baja la confianza;
-- la ficha muestra siempre el texto original de la fecha de cierre;
-- la pestaña de evidencia lista todas las páginas leídas.
+- every criterion stores `quote` (verbatim text) and `source_url`;
+- if the quote is not found in the source text, it is discarded and confidence drops;
+- the detail page always shows the original text of the closing date;
+- the evidence tab lists every page that was read.
 
-### Elegibilidad
+### Eligibility
 
-Los criterios se clasifican en: `geografia`, `legal`, `etapa`, `sector`, `ingresos`, `equipo`, `producto`,
+Criteria are classified into: `geografia`, `legal`, `etapa`, `sector`, `ingresos`, `equipo`, `producto`,
 `idioma`, `otro`.
 
-Veredictos: `cumple` (1), `falta_dato` (0,5), `ambiguo` (0,5), `no_cumple` (0). El veredicto global es
-`no elegible` si hay algún `no_cumple`, `faltan datos` si hay campos sin cubrir, y `elegible` si todo cumple.
+Verdicts: `cumple` (1), `falta_dato` (0.5), `ambiguo` (0.5), `no_cumple` (0). The overall verdict is
+`not eligible` if any `no_cumple` exists, `needs info` if any field is uncovered, and `eligible` if everything
+is met.
 
-### Accesibilidad visual
+### Visual accessibility
 
-La app está pensada para lectura con baja visión:
+The app is designed for reading with low vision:
 
-- **Sin bold en ningún lado**: el peso máximo es 500 (títulos, badges, botones). No hay 600/700.
-- **Tamaño global** con un control en la barra lateral: **A** (×1.10 → 16 px de cuerpo), **A+** (×1.25, por
-  defecto → 18 px) y **A++** (×1.45 → 21 px). Se aplica a toda la app, se guarda en `localStorage` y se aplica
-  antes del primer pintado (sin flash).
-- Ningún texto queda por debajo de **16 px** en el ajuste máximo.
-- Todo el escalado usa `calc(Npx * var(--fs))`, así que también crecen tablas, badges, formularios y la ficha.
-- **Foco de teclado visible** de 3 px, `prefers-reduced-motion` respetado y contraste AA.
-- La información nunca depende solo del color: siempre hay texto (“Cierra en 7 días”, “Ya pasó”, “Falta dato”).
+- **No bold anywhere**: the maximum weight is 500 (titles, badges, buttons). There is no 600/700.
+- **Global text size** control in the sidebar: **A** (×1.10 → 16 px body), **A+** (×1.25, default → 18 px) and
+  **A++** (×1.45 → 21 px). It applies to the whole app, is stored in `localStorage` and applied before the first
+  paint (no flash).
+- No text falls below **16 px** at the maximum setting.
+- All scaling uses `calc(Npx * var(--fs))`, so tables, badges, forms and the detail page grow too.
+- **Visible keyboard focus** of 3 px, `prefers-reduced-motion` respected and AA contrast.
+- Information never relies on color alone: there is always text ("Cierra en 7 días", "Ya pasó", "Falta dato").
 
-### Línea de tiempo
+### Timeline
 
-El Panel (`/`) es solo la línea de tiempo, agrupada por mes:
+The dashboard (`/`) is only the timeline, grouped by month:
 
-- meses en **37 px** en el ajuste por defecto (sin bold);
-- los meses futuros van primero en orden cronológico; los pasados al final con la etiqueta “ya pasó”;
-- lo que no tiene fecha se agrupa al final en “Sin fecha”;
-- ocupa la pantalla completa y **solo scrollea el contenedor interno**, con encabezados de mes sticky.
+- months at **37 px** at the default setting (no bold);
+- future months come first in chronological order; past ones at the end labeled "ya pasó";
+- items without a date are grouped at the end under "Sin fecha";
+- it fills the screen and **only the inner container scrolls**, with sticky month headers.
 
-## Análisis en lote (400+ links)
+## Batch analysis (400+ links)
 
-La cola vive en SQLite, así que **sobrevive reinicios**: podés cargar 400 links, cerrar la laptop y al volver
-sigue donde quedó.
+The queue lives in SQLite, so it **survives restarts**: you can queue 400 links, close the laptop and come back
+to find it where it left off.
 
-- **Cargar**: `/cola` → pegás los links (uno por línea o separados por coma). Se descartan duplicados y los que
-  ya están en el panel. No se clasifica al encolar: cada link se evalúa cuando le toca.
-- **Concurrencia**: 1 a 4 análisis en paralelo. Cada uno abre su propio Chromium (~250 MB). Empezá con 2.
-- **Pausa**: los análisis en curso terminan y no se toma ninguno nuevo. Reanudar es instantáneo.
-- **Progreso**: pendientes, procesando, listas, descartadas, errores, promedio por link y ETA calculada con los
-  últimos 20.
-- **Descarte automático**: si la clasificación dice que el link no tiene que ver con el negocio, se marca
-  `rejected` **sin rastrear una sola página** (2 segundos en vez de 2 minutos).
-- **Recuperación**: si el proceso muere a mitad de un análisis, el worker lo reencola solo a los 8 minutos.
+- **Load**: `/cola` → paste the links (one per line or comma-separated). Duplicates and links already on the
+  dashboard are dropped. Nothing is classified when queued: each link is evaluated when its turn comes.
+- **Concurrency**: 1 to 4 analyses in parallel. Each opens its own Chromium (~250 MB). Start with 2.
+- **Pause**: running analyses finish and no new one is taken. Resuming is instant.
+- **Progress**: pending, processing, done, discarded, errors, average per link and ETA computed from the last
+  20.
+- **Automatic discard**: if classification says the link is unrelated to the business, it is marked `rejected`
+  **without crawling a single page** (2 seconds instead of 2 minutes).
+- **Recovery**: if the process dies mid-analysis, the worker re-queues it after 8 minutes.
 
-Tiempo estimado para 400 links con 2 en paralelo y ~2 min por link: **~6,5 horas**. Con 3: ~4,5 horas.
+Estimated time for 400 links with 2 in parallel and ~2 min per link: **~6.5 hours**. With 3: ~4.5 hours.
 
-## Pegar un link rápido
+## Quick link paste
 
-Hay un botón flotante **“Pegar link”** siempre visible, en cualquier pantalla (o **⌘K / Ctrl+K**). Al abrirlo:
+There is a floating **"Pegar link"** button always visible on any screen (or **⌘K / Ctrl+K**). When opened:
 
-1. Lee el portapapeles **solo en ese momento** (requiere gesto del usuario; nunca en segundo plano).
-2. Si encuentra una URL —aunque venga mezclada con texto— la pega sola.
-3. El campo hace una animación de onda (wobble) como confirmación, y se desactiva con
-   `prefers-reduced-motion`.
-4. Enter analiza el link y te lleva a la ficha.
+1. It reads the clipboard **only at that moment** (requires a user gesture; never in the background).
+2. If it finds a URL — even mixed with text — it pastes it by itself.
+3. The field plays a wobble animation as confirmation, disabled with `prefers-reduced-motion`.
+4. Enter analyzes the link and takes you to the detail page.
 
-El modal es glassmorphism (`backdrop-filter`) con un fallback sólido si el navegador no lo soporta: la
-legibilidad manda. Tiene foco atrapado, `aria-modal`, cierre con Escape y devuelve el foco al botón.
+The modal is glassmorphism (`backdrop-filter`) with a solid fallback if the browser does not support it:
+legibility wins. It traps focus, has `aria-modal`, closes with Escape and returns focus to the button.
 
-## Estructura legal de un tercero
+## Third-party legal structure
 
-Si el proyecto no tiene personería propia y opera bajo la estructura de una cooperativa o sociedad aliada, se
-elige **“Opera bajo la estructura legal de un tercero”** y se describe en el detalle.
-En ese caso, un requisito de “estar constituida” **no se marca como cumplido ni como incumplido**: queda
-`ambiguo`, con la aclaración de que hay que confirmar si la cooperativa puede figurar como solicitante.
-Los requisitos de facturación/CUIT se evalúan con el campo “¿Pueden emitir factura?”.
+If the project has no legal entity of its own and operates under a cooperative or partner company, you choose
+**"Opera bajo la estructura legal de un tercero"** and describe it in the detail field.
+In that case, a "must be incorporated" requirement is **neither marked as met nor as failed**: it stays
+`ambiguous`, with a note that you must confirm whether the cooperative can appear as applicant.
+Invoicing/CUIT requirements are evaluated with the "¿Pueden emitir factura?" field.
 
-### Documentos de contexto del proyecto
+### Project context documents
 
-En **Perfil del proyecto → Documentos de contexto** se pueden pegar links a un pitch deck, métricas, roadmap o
-one-pager. Al agregarlos, el servidor **lee el contenido** (Google Docs vía `export?format=txt`, PDFs con
-`unpdf`, HTML plano) y lo guarda.
+In **Perfil del proyecto → Documentos de contexto** you can paste links to a pitch deck, metrics, roadmap or
+one-pager. When added, the server **reads the content** (Google Docs via `export?format=txt`, PDFs with `unpdf`,
+plain HTML) and stores it.
 
-Ese texto entra como fuente de verdad en los dos prompts: al extraer requisitos de una convocatoria y al comparar
-criterio por criterio. Si un documento responde un requisito, deja de ser `falta_dato`.
+That text becomes a source of truth in both prompts: when extracting grant requirements and when comparing
+criterion by criterion. If a document answers a requirement, it stops being `falta_dato`.
 
-Lo que esté detrás de un login no se puede leer: el documento se guarda igual, marcado como “sin contenido”.
+Anything behind a login cannot be read: the document is still stored, marked as "sin contenido".
 
-### Corregir un criterio sin salir de la ficha
+### Fixing a criterion without leaving the detail page
 
-Cada criterio que no está en “cumple” tiene un botón **Aportar el dato** (o *Aclarar* / *Corregir* según el
-veredicto). Se abre un campo de texto en la misma tarjeta: escribís el dato real —“factura a través de la
-cooperativa”, “el equipo tiene dos integrantes”— y la IA re-evalúa **solo ese criterio** contra el perfil +
-tu aporte, recalcula el score y el veredicto del programa, y actualiza la recomendación.
+Every criterion that is not "met" has an **Aportar el dato** button (or *Aclarar* / *Corregir* depending on the
+verdict). A text field opens inside the card: you write the real fact — "invoices through the cooperative", "the
+team has two members" — and the AI re-evaluates **only that criterion** against the profile + your input,
+recomputes the score and the program verdict, and updates the recommendation.
 
-El aporte queda guardado en `criteria.user_note`, se incluye en las próximas re-evaluaciones y se puede editar o
-quitar. Sin LLM configurado el aporte se registra igual, pero el veredicto pasa a “ambiguo” en vez de fingir que
-lo interpretó.
+The input is stored in `criteria.user_note`, included in future re-evaluations and can be edited or removed.
+Without an LLM configured the input is still recorded, but the verdict becomes "ambiguous" instead of pretending
+it was interpreted.
 
-**El perfil es el activo principal**: cuanto más completo, menos `falta_dato`. Se edita en **Perfil del
-proyecto** y el botón **Re-evaluar** vuelve a comparar sin repetir el rastreo (rápido y barato).
+**The profile is the main asset**: the more complete it is, the fewer `falta_dato`. It is edited in **Perfil del
+proyecto** and the **Re-evaluar** button compares again without repeating the crawl (fast and cheap).
 
 ---
 
-## Estructura
+## Structure
 
 ```
 app/
-  page.tsx                  panel: solo la línea de tiempo
-  resumen/                  cantidades, bandeja de tipos y tabla de gestión
-  nueva/                    ingesta de links
-  programa/[id]/            ficha completa
-  perfil/                   perfil del proyecto
-  ajustes/                  API key, modelo, límites
-  api/programs/             alta, detalle, PATCH, re-análisis, re-evaluación, borrado
-  api/export/               CSV compatible con Google Sheets
+  page.tsx                  dashboard: timeline only
+  resumen/                  counts, type inbox and management table
+  nueva/                    link ingestion
+  programa/[id]/            full detail page
+  perfil/                   project profile
+  ajustes/                  API key, model, limits
+  api/programs/             create, detail, PATCH, re-analysis, re-evaluation, delete
+  api/export/               Google Sheets-compatible CSV
   api/profile/  api/settings/
-components/                 UI (timeline, dashboard/resumen, ficha, navegación)
+components/                 UI (timeline, dashboard/summary, detail, navigation)
 lib/
   db.ts                     SQLite + schema + settings
-  crawler.ts                rastreo profundo y scoring de links
-  extract.ts                extracción LLM + heurística + validación de citas
-  eligibility.ts            matching contra el perfil
-  dates.ts                  fechas en español, timezone ART, countdown
-  llm.ts                    cliente DeepSeek
-  pipeline.ts               orquestador (claim atómico del trabajo)
-worker.ts                   cola en background
-data/app.db                 tu base local (no se versiona)
-test/fixture/               sitio de prueba para el crawler
-test/unit.test.ts           tests unitarios (node:test)
-docs/                       capturas del README
-.github/workflows/ci.yml    typecheck + tests en cada push
+  crawler.ts                deep crawl and link scoring
+  extract.ts                LLM extraction + heuristics + quote validation
+  eligibility.ts            matching against the profile
+  dates.ts                  Spanish dates, ART timezone, countdown
+  llm.ts                    DeepSeek client
+  pipeline.ts               orchestrator (atomic work claim)
+worker.ts                   background queue
+data/app.db                 your local database (not versioned)
+test/fixture/               test site for the crawler
+test/unit.test.ts           unit tests (node:test)
+docs/                       README screenshots
+.github/workflows/ci.yml    typecheck + tests on every push
 ```
 
-## Datos
+## Data
 
-Todo vive en `data/app.db` (SQLite, WAL). Tablas: `programs`, `sources`, `criteria`, `key_dates`, `profile`,
-`settings`. Borrar `data/` resetea la app. `data/` está en `.gitignore`: no se versiona ningún dato real. Los
-datos del perfil que siembra el primer arranque son de ejemplo.
+Everything lives in `data/app.db` (SQLite, WAL). Tables: `programs`, `sources`, `criteria`, `key_dates`,
+`profile`, `settings`. Deleting `data/` resets the app. `data/` is in `.gitignore`: no real data is versioned.
+The profile seeded on first run is sample data.
 
 ## Tests
 
 ```bash
-npm test         # unitarios: fechas, score de elegibilidad, citas, plataformas
+npm test         # unit: dates, eligibility score, quotes, form platforms
 npm run typecheck
 ```
 
-Son offline: no levantan navegador ni tocan la red. `test/fixture/site` es un sitio estático para probar el
-crawler a mano. CI corre typecheck + tests en cada push (`.github/workflows/ci.yml`).
+They run offline: no browser and no network. `test/fixture/site` is a static site for trying the crawler by
+hand. CI runs typecheck + tests on every push (`.github/workflows/ci.yml`).
 
 ---
 
-## Limitaciones conocidas (honestas)
+## Known limitations (honest)
 
-- **LinkedIn / Instagram / Facebook** bloquean el rastreo anónimo. En esos casos hay que pegar el texto del
-  posteo; el sistema busca el link real adentro. Si no hay link, avisa en vez de inventar.
-- **Listados de programas**: si pegás una página que lista 20 programas, el rastreo se dispersa. Conviene pegar
-  el link del programa específico.
-- **Formularios con login** no se pueden inspeccionar: se guarda la URL y la plataforma, no los campos.
-- **PDFs escaneados** (imagen) no se pueden leer sin OCR: la app lo reporta como error de esa fuente.
-- **Fechas ambiguas** (“hasta agotar cupos”, “rolling”, año omitido): se muestran con el texto original y la
-  confianza baja. El panel nunca esconde la ambigüedad.
-- Los formularios de Google/Typeform a veces requieren abrirse para ver los campos; eso queda fuera del MVP.
+- **LinkedIn / Instagram / Facebook** block anonymous crawling. In those cases you must paste the post text;
+  the system looks for the real link inside it. If there is no link, it says so instead of making one up.
+- **Program listings**: if you paste a page listing 20 programs, the crawl disperses. Better to paste the
+  specific program's link.
+- **Login-protected forms** cannot be inspected: the URL and platform are stored, not the fields.
+- **Scanned PDFs** (images) cannot be read without OCR: the app reports it as a source error.
+- **Ambiguous dates** ("hasta agotar cupos", "rolling", missing year): they are shown with the original text and
+  low confidence. The dashboard never hides the ambiguity.
+- Google/Typeform forms sometimes need to be opened to see the fields; that is out of the MVP.
 
 ## Roadmap
 
-- Alertas por email/WhatsApp T-14 / T-7 / T-3 / T-1.
-- Extensión de Chrome o bot de Telegram para “compartir → analizar”.
-- Borradores de respuestas de formulario generados desde el perfil + las bases.
-- Comparador lado a lado de dos convocatorias.
-- Historial de versiones de las bases (si el organizador cambia las fechas).
+- Closing alerts by email/WhatsApp at T-14 / T-7 / T-3 / T-1.
+- Chrome extension or Telegram bot for "share → analyze".
+- Form answer drafts generated from the profile + the terms.
+- Side-by-side comparison of two grants.
+- Version history of the terms (if the organizer changes the dates).
 
-## Licencia
+## License
 
-MIT — ver [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
