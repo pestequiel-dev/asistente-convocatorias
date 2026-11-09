@@ -1,4 +1,4 @@
-# Convocatorias · Mehmiro
+# Convocatorias
 
 Panel local para gestionar convocatorias, aceleradoras y premios. Pegás un link (y opcionalmente el texto del
 posteo de LinkedIn/Instagram) y el sistema:
@@ -6,8 +6,26 @@ posteo de LinkedIn/Instagram) y el sistema:
 1. rastrea el sitio con un navegador real,
 2. encuentra las **bases y condiciones**, los requisitos y el **formulario**,
 3. extrae todo con **citas textuales y URLs**,
-4. compara los requisitos contra el perfil de Mehmiro,
+4. compara los requisitos contra el perfil del proyecto,
 5. detecta la **fecha de cierre** y muestra el panel.
+
+> **English summary.** A local, single-user dashboard for founders who apply to many grants, accelerators and
+> awards. You paste a link; it crawls the site with a real browser, extracts requirements, deadlines and forms
+> with verbatim quotes, and scores your profile against each eligibility criterion, so you know where you stand
+> before spending an evening on an application. Built with Next.js 15, React 19, TypeScript, SQLite and
+> Playwright. Optional DeepSeek API for extraction; without a key it falls back to heuristics. Run with
+> `npm install && npm run dev` and open http://localhost:3100.
+
+---
+
+## Para quién es
+
+Para founders y equipos chicos que aplican a muchas convocatorias a la vez y pierden tiempo leyendo bases que
+después resultan no aplicar. El caso de uso es una persona (o un equipo de dos) manteniendo un pipeline de
+postulaciones: qué está abierto, qué cierra pronto, si somos elegibles y qué falta para serlo.
+
+No es multi-usuario ni SaaS: corre en tu máquina, los datos quedan en un SQLite local y nada se envía a ningún
+lado salvo el texto de las páginas al modelo que configures.
 
 ---
 
@@ -21,6 +39,9 @@ npm run dev
 Abrí **http://localhost:3100**.
 
 `npm run dev` levanta dos procesos: la web (Next.js) y el worker que procesa la cola de análisis.
+
+Al primer arranque se siembra un **perfil de ejemplo** ("Proyecto de ejemplo") para que el panel tenga algo con
+qué comparar. Se edita o se borra desde **Perfil del proyecto**.
 
 ### Conectar DeepSeek (recomendado)
 
@@ -41,6 +62,16 @@ El rastreo usa Playwright. Si no hay Chromium descargado, la app detecta automá
 ```bash
 npx playwright install chromium
 ```
+
+---
+
+## Stack
+
+- **Next.js 15** (App Router) + **React 19** + **TypeScript**, sin framework de UI.
+- **SQLite** vía `better-sqlite3` (WAL) en `data/app.db`: programas, fuentes, criterios, fechas, perfil, ajustes.
+- **Playwright** (Chromium headless) para rastrear sitios reales; **unpdf** para leer PDFs.
+- **DeepSeek API** (opcional, formato OpenAI-compatible) para extracción, clasificación y matching; heurística
+  como fallback en todo el pipeline.
 
 ---
 
@@ -71,7 +102,7 @@ POST /api/programs (url + texto)
 
 Antes de crear cualquier registro se hace un chequeo barato (preview HTTP + clasificación). El clasificador
 devuelve dos cosas distintas: el **tipo** (convocatoria / evento / competidor / referencia) y la **relevancia**
-para el negocio.
+para el proyecto.
 
 Si el link **no es relevante**, se devuelve `422` con el motivo y no se crea nada ni se rastrea. Ser
 “referencia” no alcanza para rechazarlo: la home de un fondo de inversión, una nota sobre edtech o el perfil de
@@ -161,7 +192,7 @@ Tiempo estimado para 400 links con 2 en paralelo y ~2 min por link: **~6,5 horas
 
 ## Mensajeros (CRM de aliados)
 
-`/mensajeros` es una base de contactos de gente con reputación que puede hablar de Mehmiro: docentes
+`/mensajeros` es una base de contactos de gente con reputación que puede hablar del proyecto: docentes
 referentes, directores, creadores de contenido, periodistas educativos.
 
 Cada contacto guarda rol, organización, plataforma, audiencia, alcance, temas, **cuánto cobra** y estado
@@ -198,15 +229,15 @@ legibilidad manda. Tiene foco atrapado, `aria-modal`, cierre con Escape y devuel
 
 ## Estructura legal de un tercero
 
-Si la startup no tiene personería propia y opera bajo la estructura de una cooperativa o sociedad aliada
-(es el caso de Mehmiro), se elige **“Opera bajo la estructura legal de un tercero”** y se describe en el detalle.
+Si el proyecto no tiene personería propia y opera bajo la estructura de una cooperativa o sociedad aliada, se
+elige **“Opera bajo la estructura legal de un tercero”** y se describe en el detalle.
 En ese caso, un requisito de “estar constituida” **no se marca como cumplido ni como incumplido**: queda
 `ambiguo`, con la aclaración de que hay que confirmar si la cooperativa puede figurar como solicitante.
 Los requisitos de facturación/CUIT se evalúan con el campo “¿Pueden emitir factura?”.
 
-### Documentos de contexto de la startup
+### Documentos de contexto del proyecto
 
-En **Perfil Mehmiro → Documentos de contexto** se pueden pegar links a un pitch deck, métricas, roadmap o
+En **Perfil del proyecto → Documentos de contexto** se pueden pegar links a un pitch deck, métricas, roadmap o
 one-pager. Al agregarlos, el servidor **lee el contenido** (Google Docs vía `export?format=txt`, PDFs con
 `unpdf`, HTML plano) y lo guarda.
 
@@ -226,8 +257,8 @@ El aporte queda guardado en `criteria.user_note`, se incluye en las próximas re
 quitar. Sin LLM configurado el aporte se registra igual, pero el veredicto pasa a “ambiguo” en vez de fingir que
 lo interpretó.
 
-**El perfil es el activo principal**: cuanto más completo, menos `falta_dato`. Se edita en **Perfil Mehmiro** y
-el botón **Re-evaluar** vuelve a comparar sin repetir el rastreo (rápido y barato).
+**El perfil es el activo principal**: cuanto más completo, menos `falta_dato`. Se edita en **Perfil del
+proyecto** y el botón **Re-evaluar** vuelve a comparar sin repetir el rastreo (rápido y barato).
 
 ---
 
@@ -239,7 +270,7 @@ app/
   resumen/                  cantidades, bandeja de tipos y tabla de gestión
   nueva/                    ingesta de links
   programa/[id]/            ficha completa
-  perfil/                   perfil de la startup
+  perfil/                   perfil del proyecto
   ajustes/                  API key, modelo, límites
   api/programs/             alta, detalle, PATCH, re-análisis, re-evaluación, borrado
   api/export/               CSV compatible con Google Sheets
@@ -261,7 +292,8 @@ test/fixture/               sitio de prueba para el crawler
 ## Datos
 
 Todo vive en `data/app.db` (SQLite, WAL). Tablas: `programs`, `sources`, `criteria`, `key_dates`, `profile`,
-`settings`. Borrar `data/` resetea la app.
+`settings`. Borrar `data/` resetea la app. `data/` está en `.gitignore`: no se versiona ningún dato real. Los
+datos del perfil que siembra el primer arranque son de ejemplo.
 
 ---
 
@@ -284,3 +316,7 @@ Todo vive en `data/app.db` (SQLite, WAL). Tablas: `programs`, `sources`, `criter
 - Borradores de respuestas de formulario generados desde el perfil + las bases.
 - Comparador lado a lado de dos convocatorias.
 - Historial de versiones de las bases (si el organizador cambia las fechas).
+
+## Licencia
+
+MIT — ver [LICENSE](LICENSE).
