@@ -130,37 +130,6 @@ export interface Program {
   analyzed_at: string | null;
 }
 
-export type MessengerStatus =
-  | "nuevo"
-  | "contactado"
-  | "interesado"
-  | "negociando"
-  | "acuerdo"
-  | "publico"
-  | "descartado";
-
-export interface Messenger {
-  id: number;
-  name: string;
-  role: string | null;
-  organization: string | null;
-  country: string | null;
-  platform: string | null;
-  handle: string | null;
-  audience: string | null;
-  audience_size: number | null;
-  topics: string | null;
-  status: MessengerStatus;
-  rate_usd: number | null;
-  rate_notes: string | null;
-  notes: string | null;
-  score: number | null;
-  score_reason: string | null;
-  last_contact_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface Milestone {
   id: number;
   title: string;
@@ -168,17 +137,6 @@ export interface Milestone {
   description: string | null;
   metric: string | null;
   achieved_at: string;
-  created_at: string;
-}
-
-export interface Touchpoint {
-  id: number;
-  messenger_id: number;
-  channel: string | null;
-  kind: string | null;
-  summary: string | null;
-  cost_usd: number | null;
-  happened_at: string;
   created_at: string;
 }
 

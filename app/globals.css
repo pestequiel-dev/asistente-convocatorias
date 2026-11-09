@@ -1114,17 +1114,6 @@ textarea:focus-visible {
   .fs-btn { min-height: 38px; }
 }
 
-/* ---------- messengers ---------- */
-
-.sel-item {
-  padding: 13px 15px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-}
-
-.sel-item .quote { font-size: calc(13px * var(--fs)); }
-
 /* ---------- quick add: always-visible link button + glass modal ---------- */
 
 .qa-fab {

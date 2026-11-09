@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, PlusCircle, Building2, Settings, Inbox, BarChart3, Users, ListChecks } from "lucide-react";
+import { LayoutDashboard, PlusCircle, Building2, Settings, Inbox, BarChart3, ListChecks } from "lucide-react";
 
 const items = [
   { href: "/", label: "Panel", icon: LayoutDashboard },
   { href: "/resumen", label: "Resumen", icon: BarChart3 },
-  { href: "/mensajeros", label: "Mensajeros", icon: Users },
   { href: "/cola", label: "Cola", icon: ListChecks },
   { href: "/nueva", label: "Analizar link", icon: PlusCircle },
   { href: "/perfil", label: "Perfil del proyecto", icon: Building2 },

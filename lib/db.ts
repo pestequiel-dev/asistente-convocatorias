@@ -175,41 +175,6 @@ CREATE TABLE IF NOT EXISTS profile_docs (
   created_at TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS messengers (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  role TEXT,
-  organization TEXT,
-  country TEXT,
-  platform TEXT,
-  handle TEXT,
-  audience TEXT,
-  audience_size INTEGER,
-  topics TEXT,
-  status TEXT NOT NULL DEFAULT 'nuevo',
-  rate_usd REAL,
-  rate_notes TEXT,
-  notes TEXT,
-  score INTEGER,
-  score_reason TEXT,
-  last_contact_at TEXT,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS messenger_touchpoints (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  messenger_id INTEGER NOT NULL REFERENCES messengers(id) ON DELETE CASCADE,
-  channel TEXT,
-  kind TEXT,
-  summary TEXT,
-  cost_usd REAL,
-  happened_at TEXT NOT NULL,
-  created_at TEXT NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_touch_messenger ON messenger_touchpoints(messenger_id);
-
 CREATE TABLE IF NOT EXISTS key_dates (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   program_id INTEGER NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
