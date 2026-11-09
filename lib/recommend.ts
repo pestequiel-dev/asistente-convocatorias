@@ -153,7 +153,7 @@ function eventRecommendation(p: Program): Recommendation {
     return {
       tone: "green",
       title: "Vale la pena ir",
-      body: `La relevancia para Mehmiro es alta (${score}%): hay audiencia escolar y señales de que se puede exponer o hacer contactos. ${access} ${when}`.trim(),
+      body: `La relevancia para el proyecto es alta (${score}%): hay audiencia escolar y señales de que se puede exponer o hacer contactos. ${access} ${when}`.trim(),
       points: [],
     };
   }
@@ -168,7 +168,7 @@ function eventRecommendation(p: Program): Recommendation {
   return {
     tone: "gray",
     title: "Baja prioridad",
-    body: `Relevancia baja (${score}%) para lo que vende Mehmiro. Probablemente no justifica el tiempo ni la entrada. ${when}`.trim(),
+    body: `Relevancia baja (${score}%) para lo que vende el proyecto. Probablemente no justifica el tiempo ni la entrada. ${when}`.trim(),
     points: [],
   };
 }

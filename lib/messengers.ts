@@ -99,9 +99,9 @@ export async function selectMessengers(brief: string, list: Messenger[]): Promis
     }));
 
     const { json } = await chatJson<{ results: { id: number; fit: number; reason: string; message: string }[] }>(
-      `Sos estratega de comunicación de Mehmiro, una startup edtech argentina: asistente de IA pedagógico que analiza observaciones docentes y genera evaluaciones formativas. Vende a escuelas, colegios y docentes de Argentina y LatAm.
+      `Sos estratega de comunicación del proyecto: tomá del perfil cargado qué hace, a quién le vende y en qué países opera.
 
-Te doy un BRIEF (un tema, lanzamiento u oportunidad) y una lista de CONTACTOS que podrían hablar de Mehmiro.
+Te doy un BRIEF (un tema, lanzamiento u oportunidad) y una lista de CONTACTOS que podrían hablar del proyecto.
 Elegí los 5 mejores y devolvé SOLO JSON:
 {"results":[{"id":number,"fit":0-100,"reason":"por qué encaja, 1 frase concreta","message":"primer mensaje personalizado, máximo 60 palabras, tono humano, sin plantilla"}]}
 

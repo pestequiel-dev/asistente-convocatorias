@@ -79,7 +79,7 @@ export function ContactPanel({ programId, url }: { programId: number; url: strin
 
         {!message && !error && (
           <p className="small muted" style={{ margin: 0 }}>
-            Genera un mensaje corto con qué hace Mehmiro, tracción y tu fit con la tesis del fondo, listo para pegar.
+            Genera un mensaje corto con qué hace el proyecto, tracción y tu fit con la tesis del fondo, listo para pegar.
           </p>
         )}
 

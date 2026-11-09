@@ -10,7 +10,7 @@ const items = [
   { href: "/mensajeros", label: "Mensajeros", icon: Users },
   { href: "/cola", label: "Cola", icon: ListChecks },
   { href: "/nueva", label: "Analizar link", icon: PlusCircle },
-  { href: "/perfil", label: "Perfil Mehmiro", icon: Building2 },
+  { href: "/perfil", label: "Perfil del proyecto", icon: Building2 },
   { href: "/ajustes", label: "Ajustes", icon: Settings },
 ];
 

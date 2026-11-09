@@ -239,7 +239,6 @@ export function getDb(): Database.Database {
   db.exec(SCHEMA);
   migrate(db);
   seedProfile(db);
-  applyLegalDefaults(db);
   cleanReferenceSummaries(db);
   syncFitScores(db);
   globalThis.__db = db;
@@ -298,7 +297,6 @@ function migrate(db: Database.Database) {
   }
 }
 
-/** Mehmiro operates under a cooperative's legal/tax umbrella; prefill it once. */
 /** fit_score mirrors the kind-specific score; keep it from going stale. */
 function syncFitScores(db: Database.Database) {
   db.prepare(
@@ -316,19 +314,6 @@ function cleanReferenceSummaries(db: Database.Database) {
   ).run();
 }
 
-function applyLegalDefaults(db: Database.Database) {
-  db.prepare(
-    `UPDATE profile SET
-       legal_status = 'Opera bajo la estructura legal de un tercero',
-       legal_structure_detail = ?,
-       can_invoice = ?
-     WHERE id = 1 AND (legal_status IS NULL OR legal_status = '')`
-  ).run(
-    "Una cooperativa (Lara Ltda.) nos aporta la estructura legal e impositiva. Mehmiro es el emprendimiento/proyecto, sin personería jurídica propia.",
-    "Sí, a través de un tercero"
-  );
-}
-
 function seedProfile(db: Database.Database) {
   const row = db.prepare("SELECT COUNT(*) as n FROM profile").get() as { n: number };
   if (row.n > 0) return;
@@ -336,11 +321,12 @@ function seedProfile(db: Database.Database) {
     `INSERT INTO profile (id, name, url, country, sector, description, stage, has_product, languages, updated_at)
      VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
-    "Mehmiro",
-    "https://mehmiro.com",
+    // Perfil de ejemplo: se puede editar o borrar desde "Perfil del proyecto".
+    "Proyecto de ejemplo",
+    "https://example.com",
     "Argentina",
-    "EdTech · IA pedagógica",
-    "Asistente de IA pedagógico que transforma las evaluaciones formativas: analiza las observaciones del docente según el contexto único de cada estudiante.",
+    "Sector de ejemplo",
+    "Descripción de ejemplo. Completá este perfil con qué hace tu proyecto, a quién le vende y en qué etapa está.",
     "Pre-seed",
     "Sí, producto en producción",
     "Español",

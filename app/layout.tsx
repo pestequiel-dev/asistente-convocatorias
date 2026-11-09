@@ -6,8 +6,8 @@ import { FontScale } from "@/components/font-scale";
 import { QuickAdd } from "@/components/quick-add";
 
 export const metadata: Metadata = {
-  title: "Convocatorias · Mehmiro",
-  description: "Panel de convocatorias, aceleradoras y premios para Mehmiro",
+  title: "Convocatorias",
+  description: "Panel de convocatorias, aceleradoras y premios para el proyecto",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <BrandMark />
               <div>
                 <div className="brand-name">Convocatorias</div>
-                <div className="brand-sub">Mehmiro</div>
+                <div className="brand-sub">Panel de gestión</div>
               </div>
             </Link>
             <Nav />

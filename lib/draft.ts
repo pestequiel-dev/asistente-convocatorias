@@ -53,8 +53,8 @@ export async function generateDraft(
 
   const { json } = await chatJson<{ answers: { question: string; answer: string; missing?: string }[] }>(
     `${language === "en"
-      ? "You are Mehmiro's founder writing application answers, in English, first person, direct and concrete tone."
-      : "Sos el fundador de Mehmiro escribiendo respuestas de postulación, en español rioplatense, primera persona, tono directo y concreto."}
+      ? "You are the project's founder writing application answers, in English, first person, direct and concrete tone."
+      : "Sos el fundador del proyecto escribiendo respuestas de postulación, en español rioplatense, primera persona, tono directo y concreto."}
 IDIOMA OBLIGATORIO: ${language === "en" ? "inglés (todas las preguntas y respuestas)" : "español rioplatense"}. Si el programa está en inglés, TODO va en inglés.
 REGLAS:
 - Usá SOLO la información del perfil, los hitos y los documentos. NUNCA inventes métricas, clientes, fechas ni montos.

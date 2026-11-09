@@ -6,8 +6,8 @@ await p.addInitScript({ content: "window.__name = window.__name || function (f) 
 await p.goto("https://airtable.com/appc0aJ3Qm50q8CrC/shrmSzFCQAxAwnPws", { waitUntil: "domcontentloaded", timeout: 45000 });
 await p.waitForTimeout(5000);
 const values = [
-  { label: "empresa", aliases: ["company", "startup"], value: "Mehmiro" },
-  { label: "sitio web", aliases: ["website", "web", "url", "site"], value: "https://mehmiro.com" },
+  { label: "empresa", aliases: ["company", "startup"], value: "Proyecto Demo" },
+  { label: "sitio web", aliases: ["website", "web", "url", "site"], value: "https://example.com" },
   { label: "linkedin", value: "https://linkedin.com/in/gentilmente" },
   { label: "email", value: "e@x.com" },
   { label: "Round Size *", value: "USD 500k" },

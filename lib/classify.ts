@@ -93,7 +93,7 @@ const KIND_LABEL: Record<Kind, string> = {
   convocatoria: "convocatoria / premio / fondo",
   aceleradora: "aceleradora o incubadora (programa con mentoría; puede o no invertir)",
   evento: "evento (congreso, feria, webinar, hackathon)",
-  competidor: "competidor (producto o servicio que compite con Mehmiro)",
+  competidor: "competidor (producto o servicio que compite con el proyecto)",
   inversor: "inversor (fondo de VC, ángel o aceleradora con capital)",
   referencia: "referencia (nota, artículo, recurso, ruido)",
 };
@@ -155,7 +155,7 @@ function heuristic(url: string, pasted: string, preview: string): Classification
     reason: `Señales detectadas: ${signals || "contenido del sitio"}.`,
     relevant,
     relevance_reason: relevant
-      ? "Tiene que ver con el ecosistema de Mehmiro (educación, startups o inversión)."
+      ? "Tiene que ver con el ecosistema del proyecto (educación, startups o inversión)."
       : "No se detectó relación con educación, startups ni inversión.",
   };
 }

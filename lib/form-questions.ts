@@ -246,12 +246,12 @@ export async function extractFormQuestions(url: string, programId?: number): Pro
   const profileDir = programId ? profileDirFor(programId) : undefined;
   let context;
   try {
-    const dir = profileDir ?? (await fs.promises.mkdtemp("/tmp/mehmiro-"));
+    const dir = profileDir ?? (await fs.promises.mkdtemp("/tmp/convocatorias-"));
     context = await chromium.launchPersistentContext(dir, { headless: true, executablePath });
   } catch {
     // A locked profile (another window open) must not block the read.
     try {
-      const dir = await fs.promises.mkdtemp("/tmp/mehmiro-");
+      const dir = await fs.promises.mkdtemp("/tmp/convocatorias-");
       context = await chromium.launchPersistentContext(dir, { headless: true, executablePath });
     } catch (e) {
       return { status: "error", message: (e as Error).message.slice(0, 140) };

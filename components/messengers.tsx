@@ -127,7 +127,7 @@ export function Messengers() {
         <div>
           <h1>Mensajeros</h1>
           <p>
-            Personas con reputación que pueden hablar de Mehmiro. Seguí el estado de cada conversación, cuánto
+            Personas con reputación que pueden hablar del proyecto. Seguí el estado de cada conversación, cuánto
             cobran y a quién conviene escribirle para cada tema.
           </p>
         </div>
@@ -154,7 +154,7 @@ export function Messengers() {
         <div className="kpi">
           <div className="kpi-label">Publicaron</div>
           <div className="kpi-value" style={{ color: "var(--ok)" }}>{kpis.published}</div>
-          <div className="kpi-sub">ya hablaron de Mehmiro</div>
+          <div className="kpi-sub">ya hablaron del proyecto</div>
         </div>
         <div className="kpi">
           <div className="kpi-label">Tarifas sumadas</div>
@@ -318,7 +318,7 @@ export function Messengers() {
             <h3>Todavía no hay mensajeros</h3>
             <p className="small" style={{ maxWidth: 460 }}>
               Cargá docentes referentes, creadores de contenido o periodistas educativos que puedan hablar de
-              Mehmiro, con su tarifa y su audiencia.
+              el proyecto, con su tarifa y su audiencia.
             </p>
             <button className="btn btn-primary" onClick={() => setShowForm(true)} style={{ marginTop: 6 }}>
               <Plus /> Cargar el primero

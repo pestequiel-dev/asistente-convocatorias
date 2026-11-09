@@ -32,7 +32,7 @@ Ronda: ${profile.round_details || "(sin datos)"}
 Links: ${links || "(ninguno)"}
 
 Escribí el mensaje como ${profile.founder_name || "el fundador"}.
-Incluí: qué hace Mehmiro en una línea, la tracción, por qué encaja con la tesis del fondo, y los links.
+Incluí: qué hace el proyecto en una línea, la tracción, por qué encaja con la tesis del fondo, y los links.
 Terminá con una pregunta corta.`,
     { maxTokens: 800, temperature: 0.4 }
   );
@@ -76,7 +76,7 @@ Links disponibles:
 ${links || "(ninguno)"}
 
 Escribí el email como ${profile.founder_name || "el fundador"}.
-Incluí: una línea de qué hace Mehmiro, una de tracción, los detalles de la ronda (${profile.round_details || "[FALTA: monto de la ronda]"}), y los links que existan.
+Incluí: una línea de qué hace el proyecto, una de tracción, los detalles de la ronda (${profile.round_details || "[FALTA: monto de la ronda]"}), y los links que existan.
 Cerrá con una pregunta simple.`,
     { maxTokens: 1200, temperature: 0.4 }
   );

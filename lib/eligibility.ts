@@ -106,7 +106,7 @@ export function geoOverride(
     verdict: "no_cumple",
     reason: `La convocatoria apunta a ${named
       .map((c) => c.charAt(0).toUpperCase() + c.slice(1))
-      .join(", ")} y Mehmiro opera en ${p.country}.`,
+      .join(", ")} y el proyecto opera en ${p.country}.`,
   };
 }
 
@@ -174,8 +174,8 @@ export function matchHeuristic(c: Criterion, p: Profile): { verdict: CriterionVe
     const local = /(latinoam[eé]rica|iberoam[eé]rica|am[eé]rica latina|latin america)/i.test(text);
     if (local && p.country) {
       const latam = ["argentina", "chile", "uruguay", "paraguay", "bolivia", "perú", "peru", "colombia", "ecuador", "venezuela", "méxico", "mexico", "brasil", "costa rica", "panamá", "panama", "república dominicana", "guatemala", "honduras", "el salvador", "nicaragua", "cuba"];
-      if (latam.includes(p.country.toLowerCase().trim())) return { verdict: "cumple", reason: `Mehmiro opera en ${p.country}, incluido en la región.` };
-      return { verdict: "no_cumple", reason: `La convocatoria es para Latinoamérica y Mehmiro opera en ${p.country}.` };
+      if (latam.includes(p.country.toLowerCase().trim())) return { verdict: "cumple", reason: `El proyecto opera en ${p.country}, incluido en la región.` };
+      return { verdict: "no_cumple", reason: `La convocatoria es para Latinoamérica y el proyecto opera en ${p.country}.` };
     }
     if (!p.country) return { verdict: "falta_dato", reason: "Falta cargar el país en el perfil." };
     if (text.includes(p.country.toLowerCase())) return { verdict: "cumple", reason: `La convocatoria incluye a ${p.country}.` };
@@ -251,7 +251,7 @@ export function matchHeuristic(c: Criterion, p: Profile): { verdict: CriterionVe
   }
 
   if (cat === "etapa") {
-    if (!p.stage) return { verdict: "falta_dato", reason: "Falta cargar la etapa de Mehmiro." };
+    if (!p.stage) return { verdict: "falta_dato", reason: "Falta cargar la etapa del proyecto." };
     const stage = p.stage.toLowerCase();
     const wantsEarly = /pre[- ]?seed|etapa temprana|early|idea|mvp/i.test(text);
     const wantsSeed = /seed|serie a|crecimiento/i.test(text);
@@ -273,14 +273,14 @@ export function matchHeuristic(c: Criterion, p: Profile): { verdict: CriterionVe
     if (!m) return { verdict: "falta_dato", reason: "Requisito de equipo; revisar manualmente." };
     const map: Record<string, number> = { dos: 2, tres: 3, cuatro: 4, cinco: 5 };
     const required = map[m[1]] ?? Number(m[1]);
-    if (p.founders == null) return { verdict: "falta_dato", reason: `La base pide ${required} integrantes; falta cargar cuántos tiene Mehmiro.` };
+    if (p.founders == null) return { verdict: "falta_dato", reason: `La base pide ${required} integrantes; falta cargar cuántos tiene el proyecto.` };
     return p.founders >= required
       ? { verdict: "cumple", reason: `${p.founders} fundadores ≥ ${required} exigidos.` }
       : { verdict: "no_cumple", reason: `${p.founders} fundadores < ${required} exigidos.` };
   }
 
   if (cat === "producto") {
-    if (!p.has_product) return { verdict: "falta_dato", reason: "Falta indicar si Mehmiro tiene producto en producción." };
+    if (!p.has_product) return { verdict: "falta_dato", reason: "Falta indicar si el proyecto tiene producto en producción." };
     if (/mvp|producto|prototipo|en producci[oó]n/i.test(text)) {
       return /s[ií]/i.test(p.has_product)
         ? { verdict: "cumple", reason: `El perfil indica: ${p.has_product}.` }

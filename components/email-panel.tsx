@@ -60,7 +60,7 @@ export function EmailPanel({ programId, to }: { programId: number; to: string })
 
       {!email && !error && (
         <p className="small muted" style={{ margin: 0 }}>
-          Genera un email corto con qué hace Mehmiro, tracción, la ronda y tus links.
+          Genera un email corto con qué hace el proyecto, tracción, la ronda y tus links.
         </p>
       )}
 

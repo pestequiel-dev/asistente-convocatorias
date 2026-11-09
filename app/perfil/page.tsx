@@ -153,7 +153,7 @@ export default function PerfilPage() {
 
       <div className="page-head">
         <div>
-          <h1>Perfil de Mehmiro</h1>
+          <h1>Perfil del proyecto</h1>
           <p>
             Este perfil es el que se compara contra cada convocatoria. Cuanto más completo, menos veces el panel te
             va a decir “falta dato”. Nada se inventa: lo que dejés vacío se marca como desconocido.
@@ -216,7 +216,7 @@ export default function PerfilPage() {
             </div>
             <div className="field">
               <label className="label">Link del deck</label>
-              <input className="input" placeholder="https://…/mehmiro-deck.pdf" value={form.deck_url} onChange={(e) => set("deck_url", e.target.value)} />
+              <input className="input" placeholder="https://…/deck.pdf" value={form.deck_url} onChange={(e) => set("deck_url", e.target.value)} />
             </div>
             <div className="field">
               <label className="label">Ronda</label>
@@ -267,7 +267,7 @@ export default function PerfilPage() {
               <textarea
                 className="textarea"
                 style={{ minHeight: 78 }}
-                placeholder="Ej.: la cooperativa X nos aporta personería, CUIT y facturación; Mehmiro es el proyecto que se presenta."
+                placeholder="Ej.: la cooperativa X nos aporta personería, CUIT y facturación; el emprendimiento se presenta a nombre de la cooperativa."
                 value={form.legal_structure_detail}
                 onChange={(e) => set("legal_structure_detail", e.target.value)}
               />

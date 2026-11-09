@@ -102,7 +102,7 @@ export async function extractEvent(pages: CrawledPage[], startUrl: string): Prom
 "registration_deadline":string|null,"call_for_speakers":string|null,"stand_opportunity":string|null,
 "url":string|null,"relevance_signals":string[],"confidence":number}
 
-"relevance_signals" son hechos concretos que ayudan a decidir si Mehmiro (edtech, IA para evaluaciones formativas, vende a escuelas y docentes) debería estar ahí.
+"relevance_signals" son hechos concretos que ayudan a decidir si el proyecto (ver perfil cargado: sector, propuesta y clientes) debería estar ahí.
 
 FUENTES:
 ${sources}`,
@@ -146,7 +146,7 @@ export async function extractCompetitor(pages: CrawledPage[], startUrl: string):
 "pricing":[{"plan":string,"price":string,"notes":string}],"key_features":string[],
 "strengths":string[],"weaknesses":string[],"url":string|null,"confidence":number}
 
-Contexto: Mehmiro es un asistente de IA pedagógico que analiza observaciones docentes y genera evaluaciones formativas; vende a escuelas y docentes de Argentina/LatAm.
+Contexto: el proyecto se postula a convocatorias y eventos del ecosistema; el perfil cargado describe su sector, propuesta y clientes.
 
 FUENTES:
 ${sources}`,
@@ -309,7 +309,7 @@ function normalizePortfolio(raw: unknown, pages: CrawledPage[]): { name: string;
   return out.slice(0, 12);
 }
 
-/** How good a match is this investor for Mehmiro today. */
+/** How good a match is this investor for the project today. */
 function latamTld(url: string | null): boolean {
   if (!url) return false;
   try {
@@ -432,7 +432,7 @@ function heuristicCompetitor(pages: CrawledPage[], startUrl: string): Competitor
   };
 }
 
-/** Relevance for Mehmiro: does it make business sense to be there? */
+/** Relevance for the project: does it make business sense to be there? */
 const LATAM = [
   "argentina", "chile", "uruguay", "paraguay", "bolivia", "peru", "colombia", "ecuador",
   "venezuela", "mexico", "brasil", "brazil", "costa rica", "panama", "república dominicana",
@@ -467,7 +467,7 @@ export interface EventScore {
 }
 
 /**
- * Relevance for Mehmiro, adjusted by whether the founder can actually get there.
+ * Relevance for the project, adjusted by whether the founder can actually get there.
  * A great edtech event in Mexico City is not actionable from Tigre.
  */
 export function scoreEventRelevance(
