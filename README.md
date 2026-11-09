@@ -1,5 +1,7 @@
 # Convocatorias
 
+[![CI](https://github.com/pestequiel-dev/asistente-convocatorias/actions/workflows/ci.yml/badge.svg)](https://github.com/pestequiel-dev/asistente-convocatorias/actions/workflows/ci.yml)
+
 Panel local para gestionar convocatorias, aceleradoras y premios. Pegás un link (y opcionalmente el texto del
 posteo de LinkedIn/Instagram) y el sistema:
 
@@ -15,6 +17,20 @@ posteo de LinkedIn/Instagram) y el sistema:
 > before spending an evening on an application. Built with Next.js 15, React 19, TypeScript, SQLite and
 > Playwright. Optional DeepSeek API for extraction; without a key it falls back to heuristics. Run with
 > `npm install && npm run dev` and open http://localhost:3100.
+
+---
+
+## Capturas
+
+Panel (línea de tiempo por mes):
+
+![Panel](docs/panel.png)
+
+Ficha de una convocatoria, con veredicto por criterio y cita de la fuente:
+
+![Ficha](docs/ficha.png)
+
+Datos de las capturas: perfil y programas de ejemplo (`Proyecto de ejemplo`), no hay datos reales.
 
 ---
 
@@ -190,30 +206,6 @@ sigue donde quedó.
 
 Tiempo estimado para 400 links con 2 en paralelo y ~2 min por link: **~6,5 horas**. Con 3: ~4,5 horas.
 
-## Mensajeros (CRM de aliados)
-
-`/mensajeros` es una base de contactos de gente con reputación que puede hablar del proyecto: docentes
-referentes, directores, creadores de contenido, periodistas educativos.
-
-Cada contacto guarda rol, organización, plataforma, audiencia, alcance, temas, **cuánto cobra** y estado
-(`nuevo → contactado → interesado → negociando → acuerdo → publicó / descartado`). Cada interacción se registra
-en un historial con canal, tipo, resumen, costo y fecha; eso alimenta el “último contacto” y el total invertido.
-
-**¿A quién le mando esto?** Pegás un brief y DeepSeek elige los 5 contactos con mejor encaje, explica por qué y
-redacta un primer mensaje personalizado. Devuelve además **costo estimado, alcance y CPM** (costo por mil
-alcances). Sin API key cae a un ranking por coincidencia de palabras.
-
-### Resend o ERP: ninguna de las dos
-
-- **ERP no**: un ERP gestiona inventario, finanzas y RRHH; no relaciones. Sería sobre-ingeniería.
-- **Resend no es un CRM**: es una API de envío de email (transaccional y broadcasts). No tiene estados,
-  pipeline, notas ni historial por contacto. Sirve como **canal**, no como sistema de registro.
-- Lo correcto es lo que ya está: el CRM vive en la misma SQLite, al lado de las convocatorias.
-- **Cuándo sumar Resend**: cuando el canal sea email masivo o secuencias. Se guarda el `message_id` y un webhook
-  actualiza el historial (entregado / abierto / respondido). Es una integración de 50 líneas, no un reemplazo.
-- **Cuándo migrar a un CRM real**: si pasás ~200 contactos, necesitás multi-usuario o automatizaciones. Ahí sí
-  HubSpot free / Attio / Folk, exportando el CSV.
-
 ## Pegar un link rápido
 
 Hay un botón flotante **“Pegar link”** siempre visible, en cualquier pantalla (o **⌘K / Ctrl+K**). Al abrirlo:
@@ -249,8 +241,8 @@ Lo que esté detrás de un login no se puede leer: el documento se guarda igual,
 ### Corregir un criterio sin salir de la ficha
 
 Cada criterio que no está en “cumple” tiene un botón **Aportar el dato** (o *Aclarar* / *Corregir* según el
-veredicto). Se abre un campo de texto en la misma tarjeta: escribís el dato real —“facturamos USD 0, factura la
-cooperativa”, “los fundadores tenemos 33 y 30 años”— y la IA re-evalúa **solo ese criterio** contra el perfil +
+veredicto). Se abre un campo de texto en la misma tarjeta: escribís el dato real —“factura a través de la
+cooperativa”, “el equipo tiene dos integrantes”— y la IA re-evalúa **solo ese criterio** contra el perfil +
 tu aporte, recalcula el score y el veredicto del programa, y actualiza la recomendación.
 
 El aporte queda guardado en `criteria.user_note`, se incluye en las próximas re-evaluaciones y se puede editar o
@@ -287,6 +279,9 @@ lib/
 worker.ts                   cola en background
 data/app.db                 tu base local (no se versiona)
 test/fixture/               sitio de prueba para el crawler
+test/unit.test.ts           tests unitarios (node:test)
+docs/                       capturas del README
+.github/workflows/ci.yml    typecheck + tests en cada push
 ```
 
 ## Datos
@@ -294,6 +289,16 @@ test/fixture/               sitio de prueba para el crawler
 Todo vive en `data/app.db` (SQLite, WAL). Tablas: `programs`, `sources`, `criteria`, `key_dates`, `profile`,
 `settings`. Borrar `data/` resetea la app. `data/` está en `.gitignore`: no se versiona ningún dato real. Los
 datos del perfil que siembra el primer arranque son de ejemplo.
+
+## Tests
+
+```bash
+npm test         # unitarios: fechas, score de elegibilidad, citas, plataformas
+npm run typecheck
+```
+
+Son offline: no levantan navegador ni tocan la red. `test/fixture/site` es un sitio estático para probar el
+crawler a mano. CI corre typecheck + tests en cada push (`.github/workflows/ci.yml`).
 
 ---
 
